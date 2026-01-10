@@ -1,0 +1,210 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    overflow-x: hidden;
+}
+
+.dashboard-container {
+    max-width: 1100px;
+    margin: auto;
+    padding: 30px;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* HEADER */
+.dashboard-header {
+    margin-bottom: 30px;
+}
+
+.dashboard-header h1 {
+    font-size: 32px;
+    margin-bottom: 5px;
+}
+
+.dashboard-header p {
+    font-size: 16px;
+    color: #555;
+}
+
+/* ROLE BADGE */
+.role-badge {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    color: black;
+    font-size: 13px;
+}
+
+.role-badge.student { background: #4caf50; }
+.role-badge.admin   { background: #f44336; }
+.role-badge.warden  { background: #2196f3; }
+
+/* GRID */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+/* CARD */
+.dashboard-card {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.dashboard-card h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.dashboard-card p {
+    color: #666;
+    font-size: 14px;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* LOGOUT */
+.logout-btn {
+    background: #ff5252;
+    color: #fff;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-size: 15px;
+    cursor: pointer;
+}
+
+.logout-btn:hover {
+    background: #e64545;
+}
+
+/* LOADING */
+.loading {
+    text-align: center;
+    margin-top: 50px;
+}
+
+/* ================= ADMIN STATS ================= */
+.admin-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.stat-card {
+    background: #f9f9f9;
+    border-left: 5px solid #4caf50; /* colored border */
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    min-width: 150px;
+    flex: 1;
+    transition: all 0.3s ease;
+}
+
+.stat-card h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+}
+
+.stat-card p {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #000;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* Optional: different border colors for different stats */
+.stat-card:nth-child(1) { border-color: #2196f3; } /* Total Users */
+.stat-card:nth-child(2) { border-color: #4caf50; } /* Students */
+.stat-card:nth-child(3) { border-color: #ff9800; } /* Wardens */
+
+/* ================= WARDEN SECTIONS ================= */
+.warden-notifications,
+.warden-meal-reports {
+    background: #fdfdfd;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-top: 20px;
+}
+
+.warden-notifications h3,
+.warden-meal-reports h3 {
+    margin-bottom: 12px;
+    font-size: 18px;
+    color: #333;
+}
+
+.warden-notifications input {
+    width: 70%;
+    padding: 10px 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.warden-notifications button {
+    padding: 10px 15px;
+    background: #2196f3;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.warden-notifications button:hover {
+    background: #1976d2;
+}
+
+.warden-notifications ul,
+.warden-meal-reports ul {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.warden-notifications li,
+.warden-meal-reports li {
+    padding: 8px 12px;
+    background: #fff;
+    margin-bottom: 8px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    font-size: 14px;
+}
+
+/* Scrollbar styling for notifications and reports */
+.warden-notifications ul::-webkit-scrollbar,
+.warden-meal-reports ul::-webkit-scrollbar {
+    width: 6px;
+}
+
+.warden-notifications ul::-webkit-scrollbar-thumb,
+.warden-meal-reports ul::-webkit-scrollbar-thumb {
+    background: rgba(0,0,0,0.2);
+    border-radius: 3px;
+}

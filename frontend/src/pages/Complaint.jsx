@@ -1,6 +1,7 @@
 import { useState } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
+import "../styles/complaint.css";
 
 export default function Complaint() {
     const [title, setTitle] = useState("");
@@ -10,11 +11,7 @@ export default function Complaint() {
     const submitComplaint = async (e) => {
         e.preventDefault();
         try {
-            await API.post("/complaints", {
-                title,
-                description,
-            });
-
+            await API.post("/complaints", { title, description });
             alert("Complaint submitted successfully");
             navigate("/dashboard");
         } catch (error) {
@@ -23,10 +20,10 @@ export default function Complaint() {
     };
 
     return (
-        <div>
-            <h2>Submit Complaint</h2>
+        <div className="complaint-container">
+            <form className="complaint-card" onSubmit={submitComplaint}>
+                <h2>Submit Complaint</h2>
 
-            <form onSubmit={submitComplaint}>
                 <input
                     type="text"
                     placeholder="Complaint Title"
@@ -42,7 +39,7 @@ export default function Complaint() {
                     required
                 />
 
-                <button type="submit">Submit</button>
+                <button type="submit">Submit Complaint</button>
             </form>
         </div>
     );

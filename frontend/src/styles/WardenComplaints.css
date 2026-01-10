@@ -1,0 +1,78 @@
+.warden-container {
+    max-width: 1000px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #f5f6fa;
+    border-radius: 10px;
+    box-sizing: border-box;
+}
+
+.warden-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #1e40af;
+}
+
+.no-complaints {
+    text-align: center;
+    font-style: italic;
+    color: #555;
+}
+
+/* Complaints Grid: 2 columns on desktop */
+.complaints-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+}
+
+/* Each Complaint Card */
+.complaint-card {
+    width: 65vh;
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Button */
+.resolve-btn {
+    width: fit-content;
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: none;
+    background-color: #16a34a;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+}
+
+.resolve-btn:hover {
+    background-color: #15803d;
+}
+
+/* Responsive: 1 card per row on mobile */
+@media (max-width: 600px) {
+    .warden-container {
+        padding: 15px;
+    }
+
+    .complaints-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .complaint-card {
+        padding: 15px;
+    }
+
+    .resolve-btn {
+        width: 100%;
+        text-align: center;
+    }
+}

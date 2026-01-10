@@ -1,0 +1,66 @@
+.rating-container {
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px; 
+    background: #f5f6fa;
+    box-sizing: border-box;
+    overflow-y: auto; 
+}
+
+/* CARD STYLE */
+.rating-card {
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* TITLE */
+.rating-card h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+/* INPUT FIELDS */
+.rating-card input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    box-sizing: border-box;
+}
+
+/* BUTTON */
+.rating-card button {
+    width: 100%;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    background-color: #2563eb;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+/* BUTTON HOVER */
+.rating-card button:hover {
+    background-color: #1e40af;
+}
+
+/* RESPONSIVE */
+@media (max-width: 480px) {
+    .rating-container {
+        padding: 20px 10px;
+    }
+
+    .rating-card {
+        padding: 20px;
+    }
+}

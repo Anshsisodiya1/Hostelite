@@ -1,0 +1,66 @@
+.complaint-container {
+    /* min-height: 100vh; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f4f6f8;
+    padding: 20px;
+}
+
+/* CARD */
+.complaint-card {
+    background: #ffffff;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* TITLE */
+.complaint-card h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* INPUTS */
+.complaint-card input,
+.complaint-card textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+}
+
+/* TEXTAREA HEIGHT */
+.complaint-card textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* BUTTON */
+.complaint-card button {
+    width: 100%;
+    padding: 12px;
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+/* HOVER EFFECT */
+.complaint-card button:hover {
+    background-color: #1e40af;
+}
+
+/* MOBILE RESPONSIVE */
+@media (max-width: 480px) {
+    .complaint-card {
+        padding: 20px;
+    }
+}

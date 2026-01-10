@@ -1,76 +1,87 @@
 import { useEffect, useState } from "react";
 import API from "../services/api";
+import "../styles/AdminUsers.css";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingUser, setEditingUser] = useState(null); // user being edited
+  const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({ name: "", email: "", role: "student" });
-  const [processingUser, setProcessingUser] = useState(null); // for edit/delete loading
+  const [processingUser, setProcessingUser] = useState(null);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("No token found. Please log in.");
-      setLoading(false);
-      return;
-    }
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await API.get("/users");
       setUsers(Array.isArray(res.data) ? res.data : []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      alert(
-        "Failed to fetch users: " +
-          (error.response?.data?.message || error.message)
-      );
-      setUsers([]);
+    } catch (err) {
+      alert("Failed to fetch users");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  // Start editing a user
+  /* ================= SEARCH FILTER ================= */
+  const filteredUsers = users.filter((user) =>
+    user.name.toLowerCase().includes(search.toLowerCase()) ||
+    user.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  /* ================= HIGHLIGHT ================= */
+  const highlight = (text) => {
+    if (!search) return text;
+    const regex = new RegExp(`(${search})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === search.toLowerCase()
+        ? <mark key={i}>{part}</mark>
+        : part
+    );
+  };
+
+  /* ================= EDIT ================= */
   const startEdit = (user) => {
     setEditingUser(user._id);
     setFormData({ name: user.name, email: user.email, role: user.role });
   };
 
-  // Cancel editing
   const cancelEdit = () => {
     setEditingUser(null);
     setFormData({ name: "", email: "", role: "student" });
   };
 
-  // Submit edited user data
   const submitEdit = async (id) => {
     try {
       setProcessingUser(id);
-      await API.put(`/users/${id}`, formData); // backend should handle PUT /users/:id to update name/email/role
-      await fetchUsers();
+      await API.put(`/users/${id}`, formData);
+      // update state directly after successful edit
+      setUsers((prev) =>
+        prev.map((u) => (u._id === id ? { ...u, ...formData } : u))
+      );
       cancelEdit();
-    } catch (error) {
-      console.error("Error updating user:", error.response?.data || error.message);
-      alert("Failed to update user: " + (error.response?.data?.message || error.message));
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update user");
     } finally {
       setProcessingUser(null);
     }
   };
 
-  // Delete user
+  /* ================= DELETE ================= */
   const deleteUser = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm("Delete this user?")) return;
+
     try {
       setProcessingUser(id);
       await API.delete(`/users/${id}`);
-      await fetchUsers();
-    } catch (error) {
-      console.error("Error deleting user:", error.response?.data || error.message);
-      alert("Failed to delete user: " + (error.response?.data?.message || error.message));
+      // remove deleted user from state
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error("DELETE ERROR:", err.response || err);
+      alert(err.response?.data?.message || "Delete failed – check backend");
     } finally {
       setProcessingUser(null);
     }
@@ -79,12 +90,22 @@ export default function AdminUsers() {
   if (loading) return <p>Loading users...</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div className="admin-users-container">
       <h2>Manage Users</h2>
-      {users.length === 0 ? (
+
+      {/* SEARCH */}
+      <input
+        type="text"
+        className="search-input"
+        placeholder="Search by name or email"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+      />
+
+      {filteredUsers.length === 0 ? (
         <p>No users found</p>
       ) : (
-        <table border="1" cellPadding="5" style={{ borderCollapse: "collapse", width: "100%" }}>
+        <table className="users-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -93,75 +114,72 @@ export default function AdminUsers() {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
-            {users.map((user) => (
+            {filteredUsers.map((user) => (
               <tr key={user._id}>
                 <td>
                   {editingUser === user._id ? (
                     <input
-                      type="text"
                       value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
                     />
                   ) : (
-                    user.name
+                    highlight(user.name)
                   )}
                 </td>
+
                 <td>
                   {editingUser === user._id ? (
                     <input
-                      type="email"
                       value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
                     />
                   ) : (
-                    user.email
+                    highlight(user.email)
                   )}
                 </td>
+
                 <td>
                   {editingUser === user._id ? (
                     <select
                       value={formData.role}
-                      onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, role: e.target.value })
+                      }
                     >
                       <option value="student">Student</option>
                       <option value="warden">Warden</option>
-                      <option value="admin">Security</option>
+                      <option value="admin">Admin</option>
                     </select>
                   ) : (
                     user.role
                   )}
                 </td>
+
                 <td>
                   {user.role !== "admin" ? (
-                    <>
-                      {editingUser === user._id ? (
-                        <>
-                          <button
-                            onClick={() => submitEdit(user._id)}
-                            disabled={processingUser === user._id}
-                          >
-                            Save
-                          </button>
-                          <button onClick={cancelEdit}>Cancel</button>
-                        </>
-                      ) : (
-                        <>
-                          <button onClick={() => startEdit(user)}>Edit</button>
-                          <button
-                            onClick={() => deleteUser(user._id)}
-                            disabled={processingUser === user._id}
-                          >
-                            Delete
-                          </button>
-                        </>
-                      )}
-                      {processingUser === user._id && (
-                        <span style={{ marginLeft: "10px" }}>Processing...</span>
-                      )}
-                    </>
+                    editingUser === user._id ? (
+                      <>
+                        <button onClick={() => submitEdit(user._id)}>Save</button>
+                        <button onClick={cancelEdit}>Cancel</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(user)}>Edit</button>
+                        <button onClick={() => deleteUser(user._id)}>Delete</button>
+                      </>
+                    )
                   ) : (
-                    <span>Admin</span>
+                    "Admin"
+                  )}
+
+                  {processingUser === user._id && (
+                    <span className="processing-text">Processing...</span>
                   )}
                 </td>
               </tr>

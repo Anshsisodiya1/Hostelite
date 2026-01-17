@@ -579,6 +579,48 @@
   font-weight: 400;
 }
 
+/* Select element styling */
+.auth-input[type="select"],
+select.auth-input {
+  width: 100%;
+  padding: 14px 14px 14px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+  text-align: left;
+  background: #ffffff;
+  color: #1e293b;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+select.auth-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 
+    0 0 0 4px rgba(102, 126, 234, 0.1),
+    0 4px 12px rgba(102, 126, 234, 0.15);
+  transform: translateY(-1px);
+}
+
+/* Custom dropdown arrow */
+select.auth-input {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 20px;
+  padding-right: 44px;
+}
+
+select.auth-input:focus {
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+}
+
 .password-toggle {
   position: absolute;
   right: 16px;
@@ -736,32 +778,6 @@
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
-}
-
-.divider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 32px 0;
-  color: #94a3b8;
-  font-size: 14px;
-  font-weight: 500;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.divider::before,
-.divider::after {
-  content: '';
-  flex: 1;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
-}
-
-.divider span {
-  padding: 0 20px;
-  text-align: center;
-  background: rgba(255, 255, 255, 0.9);
 }
 
 .social-login {

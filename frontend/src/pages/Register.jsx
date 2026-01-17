@@ -18,6 +18,7 @@ export default function Register() {
   const [isFocused, setIsFocused] = useState("");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showSuccess, setShowSuccess] = useState(false);
+  const [agreeTerms, setAgreeTerms] = useState(false);
 
   const nameInputRef = useRef(null);
   const emailInputRef = useRef(null);
@@ -110,6 +111,11 @@ export default function Register() {
       return;
     }
 
+    if (!agreeTerms) {
+      setError("Please agree to the Terms of Service and Privacy Policy");
+      return;
+    }
+
     if (!validateEmail(email)) {
       setError("Please enter a valid email address");
       return;
@@ -178,6 +184,9 @@ export default function Register() {
         break;
       case 'confirmPassword':
         setConfirmPassword(value);
+        break;
+      case 'role':
+        setRole(value);
         break;
     }
   };
@@ -331,7 +340,7 @@ export default function Register() {
 
           <div className="input-group">
             <div className={`input-wrapper ${isFocused === 'role' ? 'focused' : ''}`}>
-              <span className="input-icon">🎓</span>
+              <span className="input-icon">👀</span>
               <select
                 value={role}
                 onChange={(e) => handleInputChange('role', e.target.value)}
@@ -352,13 +361,11 @@ export default function Register() {
             <label className="checkbox-label">
               <input
                 type="checkbox"
-                checked={loading}
+                checked={agreeTerms}
+                onChange={(e) => setAgreeTerms(e.target.checked)}
                 disabled={loading}
-                readOnly
               />
-              <span className="checkbox-custom">
-                <span className="checkbox-checkmark">✓</span>
-              </span>
+              <span className="checkbox-custom"></span>
               I agree to the Terms of Service and Privacy Policy
             </label>
           </div>
@@ -378,39 +385,10 @@ export default function Register() {
           </button>
         </form>
 
-        <div className="divider">
-          <span>OR</span>
-        </div>
-
-        <div className="social-login">
-          <button 
-            className="social-btn google" 
-            type="button"
-            onClick={() => handleSocialLogin('google')}
-            disabled={loading}
-          >
-            <span className="social-icon">🌐</span>
-            Sign up with Google
-          </button>
-          <button 
-            className="social-btn microsoft" 
-            type="button"
-            onClick={() => handleSocialLogin('microsoft')}
-            disabled={loading}
-          >
-            <span className="social-icon">🪟</span>
-            Sign up with Microsoft
-          </button>
-        </div>
-
         <p className="auth-footer">
-          Already have an account? <span onClick={() => navigate("/login")} style={{color:"#007bff", cursor:"pointer"}}>Sign in</span>
+          Already have an account? <span onClick={() => navigate("/login")} style={{color:"#007bff", cursor:"pointer"}}>Log-in</span>
         </p>
 
-        <div className="security-badge">
-          <span className="security-icon">🔒</span>
-          <span className="security-text">Secure & Encrypted</span>
-        </div>
       </div>
     </div>
   );

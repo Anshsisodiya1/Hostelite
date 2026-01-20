@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../services/api";
 import "../styles/mealRating.css";
-import { Star, Coffee, Utensils, Moon, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { Star, Coffee, Utensils, Moon, CheckCircle, AlertCircle, Loader2, Calendar } from "lucide-react";
 
 export default function MealRating() {
     const [breakfast, setBreakfast] = useState(0);
@@ -101,7 +101,7 @@ export default function MealRating() {
         setShowError(false);
         
         try {
-            await API.post("/ratings", { 
+            await API.post("/ratings/submit", { 
                 breakfast, 
                 lunch, 
                 dinner

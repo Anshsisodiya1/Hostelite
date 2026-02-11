@@ -1,0 +1,102 @@
+/* UPI Payment Page Styles */
+
+.upi-apps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.upi-app-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.upi-app-card:hover {
+    border-color: #3b82f6;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.upi-app-card.selected {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+}
+
+.app-icon {
+    font-size: 2rem;
+    margin-bottom: 4px;
+}
+
+.app-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+.qr-option {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.qr-button {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 auto;
+    transition: all 0.3s ease;
+}
+
+.qr-button:hover {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: translateY(-1px);
+}
+
+.qr-code-display {
+    margin-top: 1rem;
+    padding: 2rem;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.qr-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    color: #6b7280;
+}
+
+.qr-placeholder p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.qr-placeholder small {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+@media (max-width: 768px) {
+    .upi-apps-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

@@ -113,26 +113,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* SEARCH BAR - ADMIN ONLY */}
-      {user?.role === "admin" && (
-        <div className="search-section">
-          <div className="search-container">
-            <Search size={20} className="search-icon" />
-            <input
-              type="text"
-              placeholder="Quick user lookup..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              className="search-input"
-            />
-            <button onClick={handleSearch} className="search-btn">
-              Search
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* ADMIN STATS */}
       {user?.role === "admin" && (
         <>
@@ -338,7 +318,7 @@ export default function Dashboard() {
               title="System Settings"
               description="Configure system preferences"
               icon={<Settings size={32} />}
-              onClick={() => navigate("/admin/under-construction")}
+              onClick={() => navigate("/admin/system-settings")}
             />
           </>
         )}

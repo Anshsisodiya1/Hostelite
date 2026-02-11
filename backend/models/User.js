@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      trim: true,
     },
 
     password: {
@@ -28,8 +29,9 @@ const userSchema = new mongoose.Schema(
     },
 
     // ================= HOSTEL =================
-    roomNumber: {
-      type: String,
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
       default: null,
     },
 
@@ -38,6 +40,9 @@ const userSchema = new mongoose.Schema(
       default: "Hostelite",
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
+
 module.exports = mongoose.model("User", userSchema);

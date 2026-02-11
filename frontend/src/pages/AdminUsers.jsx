@@ -5,13 +5,14 @@ import "../styles/AdminUsers.css";
 
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingUser, setEditingUser] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     role: "student",
-    roomNumber: "", // NEW
+    room: "", // store room ObjectId
   });
   const [processingUser, setProcessingUser] = useState(null);
   const [search, setSearch] = useState("");
@@ -20,70 +21,69 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
+    fetchRooms();
   }, []);
 
+  // ================= FETCH USERS =================
   const fetchUsers = async () => {
     try {
-      setLoading(true);
       const res = await API.get("/users");
       setUsers(Array.isArray(res.data) ? res.data : []);
-    } catch {
+    } catch (err) {
       alert("Failed to fetch users");
+    }
+  };
+
+  // ================= FETCH ROOMS =================
+  const fetchRooms = async () => {
+    try {
+      const res = await API.get("/rooms");
+      setRooms(res.data || []);
+    } catch (err) {
+      alert("Failed to fetch rooms");
     } finally {
       setLoading(false);
     }
   };
 
+  // ================= FILTER USERS =================
   const filteredUsers = users.filter(
     (user) =>
       user.name.toLowerCase().includes(search.toLowerCase()) ||
       user.email.toLowerCase().includes(search.toLowerCase())
   );
 
-  const highlight = (text) => {
-    if (!search) return text;
-    const regex = new RegExp(`(${search})`, "gi");
-    return text.split(regex).map((part, i) =>
-      part.toLowerCase() === search.toLowerCase() ? (
-        <mark key={i}>{part}</mark>
-      ) : (
-        part
-      )
-    );
-  };
-
+  // ================= START EDIT =================
   const startEdit = (user) => {
     setEditingUser(user._id);
     setFormData({
       name: user.name,
       email: user.email,
       role: user.role,
-      roomNumber: user.roomNumber || "", // NEW
+      room: user.room?._id || "",
     });
   };
 
+  // ================= CANCEL EDIT =================
   const cancelEdit = () => {
     setEditingUser(null);
-    setFormData({ name: "", email: "", role: "student", roomNumber: "" }); // NEW
+    setFormData({
+      name: "",
+      email: "",
+      role: "student",
+      room: "",
+    });
   };
 
+  // ================= SAVE EDIT =================
   const submitEdit = async (id) => {
     try {
       setProcessingUser(id);
-      await API.put(`/users/${id}`, formData);
-      setUsers((prev) =>
-        prev.map((u) => (u._id === id ? { ...u, ...formData } : u))
-      );
 
-      // ---------------- UPDATE LOCAL STORAGE FOR LOGGED-IN STUDENT ----------------
-      const currentUser = JSON.parse(localStorage.getItem("user"));
-      if (currentUser && currentUser._id === id) {
-        localStorage.setItem(
-          "user",
-          JSON.stringify({ ...currentUser, ...formData })
-        );
-      }
-      // ------------------------------------------------------------------------------
+      await API.put(`/users/${id}`, formData);
+
+      await fetchUsers();
+      await fetchRooms();
 
       cancelEdit();
     } catch (err) {
@@ -93,6 +93,7 @@ export default function AdminUsers() {
     }
   };
 
+  // ================= DELETE USER =================
   const deleteUser = async (id) => {
     if (!window.confirm("Delete this user?")) return;
 
@@ -107,7 +108,7 @@ export default function AdminUsers() {
     }
   };
 
-  if (loading) return <p>Loading users...</p>;
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div className="admin-users-container">
@@ -122,133 +123,122 @@ export default function AdminUsers() {
           onChange={(e) => setSearch(e.target.value)}
         />
 
-        {filteredUsers.length === 0 ? (
-          <p>No users found</p>
-        ) : (
-          <table className="users-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Room Number</th> {/* NEW */}
-                <th>Actions</th>
+        <table className="users-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Room</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {filteredUsers.map((user) => (
+              <tr key={user._id}>
+                {/* NAME */}
+                <td>
+                  {editingUser === user._id ? (
+                    <input
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                    />
+                  ) : (
+                    <span
+                      className="user-name"
+                      onClick={() => navigate(`/admin/users/${user._id}`)}
+                    >
+                      {user.name}
+                    </span>
+                  )}
+                </td>
+
+                {/* EMAIL */}
+                <td>
+                  {editingUser === user._id ? (
+                    <input
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                    />
+                  ) : (
+                    user.email
+                  )}
+                </td>
+
+                {/* ROLE */}
+                <td>{user.role}</td>
+
+                {/* ROOM ASSIGNMENT */}
+                <td>
+                  {editingUser === user._id &&
+                  user.role === "student" ? (
+                    <select
+                      value={formData.room}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          room: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="">Select Room</option>
+
+                      {rooms.map((room) => (
+                        <option
+                          key={room._id}
+                          value={room._id}
+                          disabled={
+                            room.isOccupied &&
+                            room._id !== formData.room
+                          }
+                        >
+                          {room.roomNumber}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    user.room?.roomNumber || "-"
+                  )}
+                </td>
+
+                {/* ACTIONS */}
+                <td>
+                  {user.role !== "admin" ? (
+                    editingUser === user._id ? (
+                      <>
+                        <button onClick={() => submitEdit(user._id)}>
+                          Save
+                        </button>
+                        <button onClick={cancelEdit}>
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => startEdit(user)}>
+                          Edit
+                        </button>
+                        <button onClick={() => deleteUser(user._id)}>
+                          Delete
+                        </button>
+                      </>
+                    )
+                  ) : (
+                    "Admin"
+                  )}
+
+                  {processingUser === user._id &&
+                    " Processing..."}
+                </td>
               </tr>
-            </thead>
-
-            <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user._id}>
-                  <td>
-                    {editingUser === user._id ? (
-                      <input
-                        value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
-                      />
-                    ) : (
-                      <span
-                        className="user-name"
-                        onClick={() => navigate(`/admin/users/${user._id}`)}
-                      >
-                        {highlight(user.name)}
-                      </span>
-                    )}
-                  </td>
-
-                  <td>
-                    {editingUser === user._id ? (
-                      <input
-                        value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
-                      />
-                    ) : (
-                      highlight(user.email)
-                    )}
-                  </td>
-
-                  <td>
-                    {editingUser === user._id ? (
-                      <select
-                        value={formData.role}
-                        onChange={(e) =>
-                          setFormData({ ...formData, role: e.target.value })
-                        }
-                      >
-                        <option value="student">Student</option>
-                        <option value="warden">Warden</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    ) : (
-                      user.role
-                    )}
-                  </td>
-
-                  <td>
-                    {editingUser === user._id ? (
-                      <input
-                        value={formData.roomNumber}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            roomNumber: e.target.value,
-                          })
-                        }
-                      />
-                    ) : (
-                      user.roomNumber || "-" // show "-" if not assigned
-                    )}
-                  </td>
-
-                  <td>
-                    {user.role !== "admin" ? (
-                      editingUser === user._id ? (
-                        <div className="action-buttons">
-                          <button
-                            className="save-btn"
-                            onClick={() => submitEdit(user._id)}
-                          >
-                            Save
-                          </button>
-                          <button
-                            className="cancel-btn"
-                            onClick={cancelEdit}
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="action-buttons">
-                          <button
-                            className="edit-btn"
-                            onClick={() => startEdit(user)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            className="delete-btn"
-                            onClick={() => deleteUser(user._id)}
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      )
-                    ) : (
-                      "Admin"
-                    )}
-
-                    {processingUser === user._id && (
-                      <span className="processing-text"> Processing...</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );

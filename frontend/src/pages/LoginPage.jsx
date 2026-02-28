@@ -5,8 +5,8 @@ import Login from "./Login";
 import "../styles/LoginPage.css";
 import GetStartedForm from "../pages/GetStartedForm.jsx";
 import mailicon from "../assets/mail-icon.svg";
-import messageIcon from "../assets/message-icon.svg";
-import phoneicon from "../assets/phone-icon.svg"; 
+// import messageIcon from "../assets/message-icon.svg";
+import PhoneIcon from "../assets/phone-icon.svg";
 
 export default function LoginPage() {
   const [showLogin, setShowLogin] = useState(false);
@@ -551,47 +551,57 @@ export default function LoginPage() {
       </section>
 
       {/* FOOTER */}
-
-      <footer id="footer" className="footer">
-        <div className="container">
-          <div className="footer-content">
-            <div className="footer-brand">
-              <h3>Hostelite</h3>
-              <p>Smart hostel management for modern education</p>
-            </div>
-
-            <div className="footer-links">
-              <div className="footer-section">
-                <h4>Product</h4>
-                <a href="#">Features</a>
-                <a href="#">Pricing</a>
-                <a href="#">Security</a>
-              </div>
-
-              <div className="footer-section">
-                <h4>Company</h4>
-                <a href="#">About</a>
-                <a href="#">Contact</a>
-                <a href="#">Careers</a>
-              </div>
-
-              <div className="footer-section">
-                <h4>Support</h4>
-                <a href="#">Help Center</a>
-                <a href="#">Documentation</a>
-                <a href="#">Status</a>
-              </div>
-            </div>
+      <footer className="footer">
+        <div className="footer-container">
+          {/* Logo & Description */}
+          <div className="footer-brand">
+            <h3 className="footer-logo"> Hostelite</h3>
+            <p className="footer-description">
+              Modern hostel management platform designed to simplify student
+              accommodation and streamline operations.
+            </p>
           </div>
 
-          <div className="footer-bottom">
-            <p>© 2024 Hostelite. All rights reserved.</p>
-            <div className="footer-social">
-              <span><img src={mailicon} alt="Mail" /></span>
-              <span><img src={messageIcon} alt="msg" /></span>
-              <span><img src={phoneicon} alt="phone" /></span>
+          {/* Quick Links */}
+          <div className="footer-links">
+            <h4>Quick Links</h4>
+            <a href="#hero">Home</a>
+            <a href="#about">About</a>
+            <a href="#services">Services</a>
+            <a href="#features">Features</a>
+            <a href="#testimonials">Testimonials</a>
+          </div>
+
+          {/* Resources */}
+          <div className="footer-links">
+            <h4>Resources</h4>
+            <a href="/login">Login</a>
+            <a href="/register">Register</a>
+            <a href="/forgot-password">Forgot Password</a>
+          </div>
+
+          {/* Contact Info */}
+          <div className="footer-contact">
+            <h4>Contact</h4>
+
+            <div className="contact-item">
+              <img src={mailicon} alt="Mail" className="contact-icon" />
+              <span>support@hostelite.com</span>
+            </div>
+
+            <div className="contact-item">
+              <img src={PhoneIcon} alt="Phone" className="contact-icon" />
+              <span>+91 98765 43210</span>
+            </div>
+
+            <div className="contact-item">
+              <span>India</span>
             </div>
           </div>
+        </div>
+
+        <div className="footer-bottom">
+          <p>© {new Date().getFullYear()} Hostelite. All rights reserved.</p>
         </div>
       </footer>
     </>

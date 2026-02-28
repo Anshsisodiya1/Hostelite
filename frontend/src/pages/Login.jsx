@@ -12,7 +12,6 @@ export default function Login() {
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isFocused, setIsFocused] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -66,17 +65,15 @@ export default function Login() {
           localStorage.removeItem("rememberedEmail");
         }
 
-        setShowSuccess(true);
-
-        setTimeout(() => {
-          login(res.data.token, res.data.user);
-          navigate("/dashboard");
-        }, 1500);
+        // Direct login and navigate
+        login(res.data.token, res.data.user);
+        navigate("/dashboard");
       } else {
         setError("Invalid response from server");
       }
     } catch (error) {
       console.error("Login error:", error);
+
       if (error.response?.status === 401) {
         setError("Invalid email or password");
       } else if (error.response?.status === 429) {
@@ -94,9 +91,7 @@ export default function Login() {
   };
 
   const handleInputChange = (field, value) => {
-    if (error) {
-      setError("");
-    }
+    if (error) setError("");
 
     if (field === "email") {
       setEmail(value);
@@ -123,17 +118,11 @@ export default function Login() {
               <div className="logo-glow"></div>
             </div>
             <h2 className="auth-title">Welcome Back</h2>
-            <p className="auth-subtitle">Sign in to your Hostelite account</p>
+            <p className="auth-subtitle">
+              Sign in to your Hostelite account
+            </p>
           </div>
         </div>
-
-        {showSuccess && (
-          <div className="success-message">
-            <div className="success-icon">✨</div>
-            <div className="success-text">Login successful</div>
-            <div className="success-progress"></div>
-          </div>
-        )}
 
         {error && (
           <div className="error-message">
@@ -145,15 +134,18 @@ export default function Login() {
         <form onSubmit={loginHandler} className="auth-form">
           <div className="input-group">
             <div
-              className={`input-wrapper ${isFocused === "email" ? "focused" : ""}`}
+              className={`input-wrapper ${
+                isFocused === "email" ? "focused" : ""
+              }`}
             >
-              {/* <span className="input-icon"></span> */}
               <input
                 ref={emailInputRef}
                 type="email"
                 placeholder="Enter your E-mail"
                 value={email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("email", e.target.value)
+                }
                 onFocus={() => handleInputFocus("email")}
                 onBlur={handleInputBlur}
                 required
@@ -165,14 +157,17 @@ export default function Login() {
 
           <div className="input-group">
             <div
-              className={`input-wrapper ${isFocused === "password" ? "focused" : ""}`}
+              className={`input-wrapper ${
+                isFocused === "password" ? "focused" : ""
+              }`}
             >
-              {/* <span className="input-icon"></span> */}
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="Password"
                 value={password}
-                onChange={(e) => handleInputChange("password", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("password", e.target.value)
+                }
                 onFocus={() => handleInputFocus("password")}
                 onBlur={handleInputBlur}
                 required
@@ -194,13 +189,19 @@ export default function Login() {
               <input
                 type="checkbox"
                 checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
+                onChange={(e) =>
+                  setRememberMe(e.target.checked)
+                }
               />
               Remember me
             </label>
           </div>
 
-          <button type="submit" disabled={loading} className="auth-button">
+          <button
+            type="submit"
+            disabled={loading}
+            className="auth-button"
+          >
             {loading ? (
               <>
                 <span className="spinner"></span>
@@ -214,11 +215,18 @@ export default function Login() {
             )}
           </button>
         </form>
-        <p className="forgot-password" onClick={() => navigate("/forgot-password")}>Forgot Password?</p>
+
+        <p
+          className="forgot-password"
+          onClick={() => navigate("/forgot-password")}
+        >
+          Forgot Password?
+        </p>
+
         <p className="auth-footer">
           Don't have an account? <Link to="/register">Sign up</Link>
         </p>
       </div>
     </div>
   );
-}
+} 

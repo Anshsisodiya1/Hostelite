@@ -74,6 +74,27 @@
 }
 
 
+.date-time {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.time-wrapper,
+.date-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
 /* 📱 Mobile */
 @media (max-width: 768px) {
   .meal-list {

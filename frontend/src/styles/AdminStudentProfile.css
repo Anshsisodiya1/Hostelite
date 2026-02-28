@@ -1,0 +1,142 @@
+/* ==============================
+   ADMIN STUDENT PROFILE
+   Professional Dashboard Style
+============================== */
+
+.profile-cont {
+  padding: 40px 60px;
+  background-color: #f4f6f9;
+  min-height: 100vh;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-title {
+  font-size: 26px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.profile-actions button {
+  margin-left: 10px;
+}
+
+/* Buttons */
+
+.btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #1f2937;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #111827;
+}
+
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #111827;
+}
+
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.btn-success {
+  background-color: #166534;
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #14532d;
+}
+
+/* Profile Card */
+
+.profile-card {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+/* Form Grid */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.field-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.field-group span {
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.field-group input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+}
+
+.field-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* Image Section */
+
+.image-section {
+  margin-top: 40px;
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.image-card {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.image-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #374151;
+}
+
+.image-card img {
+  border-radius: 8px;
+  object-fit: cover;
+}

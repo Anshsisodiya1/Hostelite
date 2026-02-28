@@ -22,7 +22,9 @@ const userProfileSchema = new mongoose.Schema(
     address: { type: String, required: true },
     aadhaarNumber: { type: String, required: true },
     aadhaarPhoto: { type: String, required: true },
+    aadhaarFileId: { type: String }, // ImageKit file ID for deletion
     profilePhoto: { type: String, required: true },
+    profileFileId: { type: String }, // ImageKit file ID for deletion
     permanentAddress: { type: String, required: true },
 
     studentType: {

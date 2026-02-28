@@ -11,7 +11,7 @@ const {
 
 const upload = require("../middleware/multer");
 
-
+console.log("User Profile Routes Loaded");
 //   STUDENT SUBMIT PROFILE
 router.post(
   "/submit",
@@ -38,6 +38,7 @@ router.get(
   isAdmin,
   profileController.getProfileByUserId
 );
+
 
 // Get all profiles
 router.get(

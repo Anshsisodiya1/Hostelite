@@ -1,0 +1,7 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="200" height="200" fill="#f3f4f6"/>
+  <circle cx="100" cy="80" r="30" fill="#d1d5db"/>
+  <path d="M100 110C85 110 70 125 70 140C70 155 85 170 100 170C115 170 130 155 130 140C130 125 115 110 100 110Z" fill="#d1d5db"/>
+  <circle cx="100" cy="80" r="15" fill="#9ca3af"/>
+  <text x="100" y="190" text-anchor="middle" fill="#6b7280" font-size="12" font-family="Arial">No Profile Photo</text>
+</svg>

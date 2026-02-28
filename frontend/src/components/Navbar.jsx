@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import API from "../services/api";
-import "./Navbar.css";
+import "../styles/Navbar.css";
 
 export default function Navbar() {
   const navigate = useNavigate();

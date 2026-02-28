@@ -62,7 +62,23 @@ exports.getMyProfile = async (req, res) => {
       });
     }
 
-    res.json(profile);
+    const profileObj = profile.toObject();
+
+    // Convert file path to browser URL
+    if (profileObj.profilePhoto) {
+      profileObj.profilePhoto =
+        "http://localhost:5000/" +
+        profileObj.profilePhoto.replace(/\\/g, "/");
+    }
+
+    if (profileObj.aadhaarPhoto) {
+      profileObj.aadhaarPhoto =
+        "http://localhost:5000/" +
+        profileObj.aadhaarPhoto.replace(/\\/g, "/");
+    }
+
+    res.json(profileObj);
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });

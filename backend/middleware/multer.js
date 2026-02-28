@@ -1,38 +1,19 @@
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 
-const createFolder = (folder) => {
-  if (!fs.existsSync(folder)) {
-    fs.mkdirSync(folder, { recursive: true });
-  }
-};
-
-createFolder("uploads/aadhaar");
-createFolder("uploads/profile");
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    if (file.fieldname === "aadhaarPhoto") {
-      cb(null, "uploads/aadhaar");
-    } else {
-      cb(null, "uploads/profile");
-    }
-  },
-  filename: (req, file, cb) => {
-    cb(
-      null,
-      Date.now() +
-        "-" +
-        Math.round(Math.random() * 1e9) +
-        path.extname(file.originalname)
-    );
-  },
-});
+// Use memory storage for ImageKit uploads
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    // Accept only image files
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'), false);
+    }
+  }
 });
 
 module.exports = upload;

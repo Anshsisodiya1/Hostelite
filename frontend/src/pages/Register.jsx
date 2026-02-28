@@ -84,7 +84,6 @@ export default function Register() {
     
     try {
       // For demo purposes, simulate social login
-      // In production, this would redirect to OAuth provider
       if (provider === 'google') {
         // Simulate Google OAuth flow
         const googleAuthUrl = `${API.defaults.baseURL || 'http://localhost:5000'}/auth/google`;
@@ -222,7 +221,6 @@ export default function Register() {
 
         {showSuccess && (
           <div className="success-message">
-            <div className="success-icon">✨</div>
             <div className="success-text">Registration successful! Redirecting...</div>
             <div className="success-progress"></div>
           </div>

@@ -35,7 +35,8 @@ const StudentMeals = () => {
       if (newDate !== today) {
         setToday(newDate);
         setMeal(null);
-        fetchMeal();
+        // Use setTimeout to avoid synchronous setState in effect
+        setTimeout(() => fetchMeal(), 0);
       }
     }, 1000);
 

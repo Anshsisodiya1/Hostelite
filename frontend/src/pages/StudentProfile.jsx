@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
+import "../styles/StudentProfile.css";
 
 export default function StudentProfile() {
   const navigate = useNavigate();
@@ -16,10 +17,15 @@ export default function StudentProfile() {
     phone: "",
     address: "",
     aadhaarNumber: "",
+    profilePhoto: "",
+    aadhaarPhoto: "",
   });
 
   const [profilePhoto, setProfilePhoto] = useState(null);
   const [aadhaarPhoto, setAadhaarPhoto] = useState(null);
+
+  const [profilePreview, setProfilePreview] = useState(null);
+  const [aadhaarPreview, setAadhaarPreview] = useState(null);
 
   useEffect(() => {
     checkProfile();
@@ -28,6 +34,7 @@ export default function StudentProfile() {
   const checkProfile = async () => {
     try {
       const res = await API.get("/profile/me");
+
       if (res.data?.submitted) {
         setSubmitted(true);
         setFormData(res.data);
@@ -39,15 +46,8 @@ export default function StudentProfile() {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-
-    setErrors({
-      ...errors,
-      [e.target.name]: "",
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrors({ ...errors, [e.target.name]: "" });
   };
 
   const validateForm = () => {
@@ -63,7 +63,7 @@ export default function StudentProfile() {
       newErrors.motherName = "Mother Name is required";
 
     if (!formData.phone.trim())
-      newErrors.phone = "Phone number is required";
+      newErrors.phone = "Phone is required";
     else if (!/^[0-9]{10}$/.test(formData.phone))
       newErrors.phone = "Phone must be 10 digits";
 
@@ -71,114 +71,188 @@ export default function StudentProfile() {
       newErrors.address = "Address is required";
 
     if (!formData.aadhaarNumber.trim())
-      newErrors.aadhaarNumber = "Aadhaar number is required";
+      newErrors.aadhaarNumber = "Aadhaar is required";
     else if (!/^[0-9]{12}$/.test(formData.aadhaarNumber))
       newErrors.aadhaarNumber = "Aadhaar must be 12 digits";
 
     if (!profilePhoto && !submitted)
-      newErrors.profilePhoto = "Profile photo is required";
+      newErrors.profilePhoto = "Profile photo required";
 
     if (!aadhaarPhoto && !submitted)
-      newErrors.aadhaarPhoto = "Aadhaar photo is required";
+      newErrors.aadhaarPhoto = "Aadhaar photo required";
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     const data = new FormData();
 
-    Object.keys(formData).forEach((key) => {
-      data.append(key, formData[key]);
-    });
+    data.append("fullName", formData.fullName);
+    data.append("fatherName", formData.fatherName);
+    data.append("motherName", formData.motherName);
+    data.append("phone", formData.phone);
+    data.append("address", formData.address);
+    data.append("aadhaarNumber", formData.aadhaarNumber);
 
-    data.append("profilePhoto", profilePhoto);
-    data.append("aadhaarPhoto", aadhaarPhoto);
+    if (profilePhoto) data.append("profilePhoto", profilePhoto);
+    if (aadhaarPhoto) data.append("aadhaarPhoto", aadhaarPhoto);
 
     try {
-      await API.post("/profile/submit", data, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
+      await API.post("/profile/submit", data);
       alert("Profile submitted successfully");
-      setSubmitted(true);
+      checkProfile();
     } catch (err) {
       alert(err.response?.data?.message || "Submission failed");
     }
   };
 
-  if (loading) return <h3>Loading...</h3>;
+  const handleProfilePhotoChange = (e) => {
+    const file = e.target.files[0];
+    setProfilePhoto(file);
+    if (file) setProfilePreview(URL.createObjectURL(file));
+  };
+
+  const handleAadhaarPhotoChange = (e) => {
+    const file = e.target.files[0];
+    setAadhaarPhoto(file);
+    if (file) setAadhaarPreview(URL.createObjectURL(file));
+  };
+
+  if (loading) return <h3 className="loading">Loading...</h3>;
 
   return (
-    <div className="profile-container">
-      
-      <button
-        onClick={() => navigate("/dashboard")}>
-        ← Back to Dashboard
-      </button>
-
-      <h2>Student Personal Profile</h2>
+    <div className="student-profile-wrapper">
+      <div className="student-profile-header">
+        <h2>Student Personal Profile</h2>
+        <button className="btn-back" onClick={() => navigate("/dashboard")}>
+          ← Back to Dashboard
+        </button>
+      </div>
 
       {submitted ? (
-        <div className="profile-view">
-          <p><strong>Full Name:</strong> {formData.fullName}</p>
-          <p><strong>Father Name:</strong> {formData.fatherName}</p>
-          <p><strong>Mother Name:</strong> {formData.motherName}</p>
-          <p><strong>Phone:</strong> {formData.phone}</p>
-          <p><strong>Address:</strong> {formData.address}</p>
-          <p><strong>Aadhaar:</strong> {formData.aadhaarNumber}</p>
+        <div className="student-profile-card">
+
+          {/* IMAGE SECTION */}
+          <div className="profile-images">
+            {formData.profilePhoto && (
+              <div className="image-box">
+                <label>Profile Photo</label>
+                <img
+                  src={formData.profilePhoto}
+                  alt="Profile"
+                  className="profile-img"
+                />
+              </div>
+            )}
+
+            {formData.aadhaarPhoto && (
+              <div className="image-box">
+                <label>Aadhaar Photo</label>
+                <img
+                  src={formData.aadhaarPhoto}
+                  alt="Aadhaar"
+                  className="profile-img"
+                />
+              </div>
+            )}
+          </div>
+
+          {/* DETAILS SECTION */}
+          <div className="student-profile-grid">
+            <div className="info-box">
+              <label>Full Name</label>
+              <span>{formData.fullName}</span>
+            </div>
+
+            <div className="info-box">
+              <label>Father Name</label>
+              <span>{formData.fatherName}</span>
+            </div>
+
+            <div className="info-box">
+              <label>Mother Name</label>
+              <span>{formData.motherName}</span>
+            </div>
+
+            <div className="info-box">
+              <label>Phone</label>
+              <span>{formData.phone}</span>
+            </div>
+
+            <div className="info-box full-width">
+              <label>Address</label>
+              <span>{formData.address}</span>
+            </div>
+
+            <div className="info-box">
+              <label>Aadhaar Number</label>
+              <span>{formData.aadhaarNumber}</span>
+            </div>
+          </div>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="profile-form">
+        <form onSubmit={handleSubmit} className="student-profile-form">
+          <div className="form-group">
+            <label>Full Name</label>
+            <input name="fullName" onChange={handleChange} />
+            <p className="error">{errors.fullName}</p>
+          </div>
 
-          <input name="fullName" placeholder="Full Name" onChange={handleChange} />
-          <p className="error">{errors.fullName}</p>
+          <div className="form-group">
+            <label>Father Name</label>
+            <input name="fatherName" onChange={handleChange} />
+            <p className="error">{errors.fatherName}</p>
+          </div>
 
-          <input name="fatherName" placeholder="Father Name" onChange={handleChange} />
-          <p className="error">{errors.fatherName}</p>
+          <div className="form-group">
+            <label>Mother Name</label>
+            <input name="motherName" onChange={handleChange} />
+            <p className="error">{errors.motherName}</p>
+          </div>
 
-          <input name="motherName" placeholder="Mother Name" onChange={handleChange} />
-          <p className="error">{errors.motherName}</p>
+          <div className="form-group">
+            <label>Phone</label>
+            <input name="phone" onChange={handleChange} />
+            <p className="error">{errors.phone}</p>
+          </div>
 
-          <input name="phone" placeholder="Phone" onChange={handleChange} />
-          <p className="error">{errors.phone}</p>
+          <div className="form-group full-width">
+            <label>Permanent Address</label>
+            <input name="address" onChange={handleChange} />
+            <p className="error">{errors.address}</p>
+          </div>
 
-          <input name="address" placeholder="Permanent Address" onChange={handleChange} />
-          <p className="error">{errors.address}</p>
+          <div className="form-group">
+            <label>Aadhaar Number</label>
+            <input name="aadhaarNumber" onChange={handleChange} />
+            <p className="error">{errors.aadhaarNumber}</p>
+          </div>
 
-          <input name="aadhaarNumber" placeholder="Aadhaar Number" onChange={handleChange} />
-          <p className="error">{errors.aadhaarNumber}</p>
+          <div className="form-group">
+            <label>Upload Profile Photo</label>
+            <input type="file" accept="image/*" onChange={handleProfilePhotoChange} />
+            {profilePreview && (
+              <img src={profilePreview} alt="Preview" className="preview-img" />
+            )}
+            <p className="error">{errors.profilePhoto}</p>
+          </div>
 
-          <label>Upload Profile Photo</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              setProfilePhoto(e.target.files[0]);
-              setErrors({ ...errors, profilePhoto: "" });
-            }}
-          />
-          <p className="error">{errors.profilePhoto}</p>
+          <div className="form-group">
+            <label>Upload Aadhaar Photo</label>
+            <input type="file" accept="image/*" onChange={handleAadhaarPhotoChange} />
+            {aadhaarPreview && (
+              <img src={aadhaarPreview} alt="Preview" className="preview-img" />
+            )}
+            <p className="error">{errors.aadhaarPhoto}</p>
+          </div>
 
-          <label>Upload Aadhaar Photo</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              setAadhaarPhoto(e.target.files[0]);
-              setErrors({ ...errors, aadhaarPhoto: "" });
-            }}
-          />
-          <p className="error">{errors.aadhaarPhoto}</p>
-
-          <button type="submit">Submit Profile</button>
+          <button type="submit" className="btn-submit">
+            Submit Profile
+          </button>
         </form>
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import API from "../services/api";
+import "../styles/SystemSettings.css";
 
 const SystemSettings = () => {
   const [totalRooms, setTotalRooms] = useState("");
@@ -7,7 +8,6 @@ const SystemSettings = () => {
   const [message, setMessage] = useState("");
   const [rooms, setRooms] = useState([]);
 
-  // 🔹 Fetch all rooms when page loads
   useEffect(() => {
     fetchRooms();
   }, []);
@@ -38,11 +38,8 @@ const SystemSettings = () => {
 
       setMessage(res.data.message);
       setTotalRooms("");
-
-      //  Refresh rooms after creation
       await fetchRooms();
     } catch (error) {
-      console.error(error);
       setMessage("Failed to create rooms");
     } finally {
       setLoading(false);
@@ -53,37 +50,48 @@ const SystemSettings = () => {
   const availableRooms = rooms.filter((r) => !r.isOccupied).length;
 
   return (
-    <div style={{ padding: "40px" }}>
-      <h2>System Settings</h2>
+    <div className="system-container">
+      <h2 className="system-title">System Settings</h2>
 
-      {/* ================= CREATE ROOMS ================= */}
-      <form onSubmit={handleSubmit}>
-        <label>Total Rooms in Hostel:</label>
-        <br />
-        <input
-          type="number"
-          value={totalRooms}
-          onChange={(e) => setTotalRooms(e.target.value)}
-          placeholder="Enter number of rooms"
-        />
-        <br /><br />
+      {/* CREATE ROOMS */}
+      <div className="card">
+        <form onSubmit={handleSubmit}>
+          <label>Total Rooms in Hostel</label>
+          <input
+            type="number"
+            value={totalRooms}
+            onChange={(e) => setTotalRooms(e.target.value)}
+            placeholder="Enter number of rooms"
+          />
 
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Rooms"}
-        </button>
-      </form>
+          <button type="submit" className="primary-btn" disabled={loading}>
+            {loading ? "Creating..." : "Create Rooms"}
+          </button>
+        </form>
 
-      {message && <p style={{ marginTop: "20px" }}>{message}</p>}
+        {message && <p className="success-message">{message}</p>}
+      </div>
 
-      <hr style={{ margin: "30px 0" }} />
+      {/* ROOM STATISTICS */}
+      <div className="stats-section">
+        <h3 className="stats-title">Room Statistics</h3>
 
-      {/* ================= ROOM STATISTICS ================= */}
-      <h3>Room Statistics</h3>
+        <div className="stats-grid">
+          <div className="stat-card">
+            <h4>Total Rooms</h4>
+            <p>{rooms.length}</p>
+          </div>
 
-      <div style={{ marginTop: "20px" }}>
-        <p><strong>Total Rooms:</strong> {rooms.length}</p>
-        <p><strong>Occupied Rooms:</strong> {occupiedRooms}</p>
-        <p><strong>Available Rooms:</strong> {availableRooms}</p>
+          <div className="stat-card">
+            <h4>Occupied Rooms</h4>
+            <p>{occupiedRooms}</p>
+          </div>
+
+          <div className="stat-card">
+            <h4>Available Rooms</h4>
+            <p>{availableRooms}</p>
+          </div>
+        </div>
       </div>
     </div>
   );

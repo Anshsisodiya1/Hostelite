@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
-import "../styles/WardenMeals.css";
+import "../styles/wardenMeals.css";
 
 const WardenMeals = () => {
   const navigate = useNavigate();

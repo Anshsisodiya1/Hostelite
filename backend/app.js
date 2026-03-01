@@ -8,7 +8,13 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors({ origin: "http://localhost:5173", credentials: true })); // allow frontend
+app.use(cors({
+  origin: [
+    "http://localhost:5173",
+    "https://your-frontend-name.vercel.app"
+  ],
+  credentials: true
+})); // allow frontend
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 

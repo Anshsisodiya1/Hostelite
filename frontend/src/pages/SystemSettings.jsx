@@ -40,7 +40,7 @@ const SystemSettings = () => {
       setTotalRooms("");
       await fetchRooms();
     } catch (error) {
-      setMessage("Failed to create rooms");
+      setMessage("Rooms already exist or failed to create");
     } finally {
       setLoading(false);
     }

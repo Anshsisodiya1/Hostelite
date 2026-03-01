@@ -8,13 +8,15 @@ const app = express();
 connectDB();
 
 // CORS Middleware (VERY IMPORTANT)
+const cors = require("cors");
+
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://hostelite-olive.vercel.app"
-  ],
+  origin: ["http://localhost:5173", "https://hostelite-olive.vercel.app"],
   credentials: true
 }));
+
+//  VERY IMPORTANT
+app.options("*", cors());
 
 // Other Middleware
 app.use(express.json());

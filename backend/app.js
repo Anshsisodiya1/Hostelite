@@ -8,13 +8,19 @@ const app = express();
 connectDB();
 
 // Middleware
+const cors = require("cors");
+
+const cors = require("cors");
+
 app.use(cors({
   origin: [
     "http://localhost:5173",
-    "https://your-frontend-name.vercel.app"
+    "https://hostelite-olive.vercel.app"
   ],
-  credentials: true
-})); // allow frontend
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 app.use("/uploads", express.static("uploads"));
 

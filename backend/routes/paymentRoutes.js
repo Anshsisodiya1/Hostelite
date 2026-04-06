@@ -1,20 +1,28 @@
 const express = require("express");
-const { payHostelFee, getPayments, createOrder, verifyPayment, getAllPayments, getStudentPayments } = require("../controllers/paymentController");
-const { authMiddleware } = require("../middleware/authMiddleware"); 
+const {
+  createOrder,
+  verifyPayment,
+  getAllPayments,
+  getStudentPayments,
+  payHostelFee,
+  getPayments,
+} = require("../controllers/paymentController");
+
+const { authMiddleware } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
-// Razorpay payment routes
+// Razorpay routes
 router.post("/create-order", authMiddleware, createOrder);
 router.post("/verify-payment", authMiddleware, verifyPayment);
 
-// Admin routes
+// Admin
 router.get("/all", authMiddleware, getAllPayments);
 
-// Student specific routes
-router.get("/student/:studentId", getStudentPayments);
+// Student
+router.get("/student/:studentId", authMiddleware, getStudentPayments);
 
-// Legacy routes (kept for compatibility)
+// Legacy
 router.post("/pay", authMiddleware, payHostelFee);
 router.get("/", authMiddleware, getPayments);
 

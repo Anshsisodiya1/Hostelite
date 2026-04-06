@@ -24,7 +24,6 @@ export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  //  ALL HOOKS AT THE TOP
   const [stats, setStats] = useState({
     students: 0,
     wardens: 0,
@@ -32,6 +31,7 @@ export default function Dashboard() {
     payments: 0,
     complaints: { pending: 0, resolved: 0 },
   });
+
   const [search, setSearch] = useState("");
   const [complaints, setComplaints] = useState([]);
   const [profileStatus, setProfileStatus] = useState({
@@ -39,12 +39,13 @@ export default function Dashboard() {
     submitted: false,
   });
 
-  // Fetch Profile Status (Student Only)
+  // 🔥 UPDATED: Fetch complaints also for ADMIN
   useEffect(() => {
     if (!user) return;
 
     if (user.role === "admin") {
       fetchStats();
+      fetchComplaints(); // ✅ IMPORTANT
     } else if (user.role === "warden") {
       fetchComplaints();
     } else if (user.role === "student") {
@@ -67,18 +68,8 @@ export default function Dashboard() {
     }
   };
 
-  // FETCH DATA BASED ON ROLE
-  useEffect(() => {
-    if (!user) return;
-
-    if (user.role === "admin") {
-      fetchStats();
-    } else if (user.role === "warden") {
-      fetchComplaints();
-    }
-  }, [user]);
-
-  // -FETCH FUNCTIONS
+  // 🔥 REMOVED duplicate useEffect (clean)
+  
   const fetchStats = async () => {
     try {
       const res = await API.get("/users");
@@ -87,28 +78,39 @@ export default function Dashboard() {
       const students = users.filter((u) => u.role === "student").length;
       const wardens = users.filter((u) => u.role === "warden").length;
 
-      setStats({
+      setStats((prev) => ({
+        ...prev,
         students,
         wardens,
         total: users.length,
-        payments: Math.floor(Math.random() * 50) + 10, // mock payments
-        complaints: { pending: 0, resolved: 0 }, // handled separately
-      });
+        payments: Math.floor(Math.random() * 50) + 10,
+      }));
     } catch (err) {
       console.error("Failed to fetch stats:", err);
     }
   };
 
+  // 🔥 UPDATED: calculate pending + resolved dynamically
   const fetchComplaints = async () => {
     try {
       const res = await API.get("/complaints");
-      setComplaints(Array.isArray(res.data) ? res.data : []);
+      const data = Array.isArray(res.data) ? res.data : [];
+
+      setComplaints(data);
+
+      // ✅ COUNT dynamically
+      const pending = data.filter((c) => c.status === "pending").length;
+      const resolved = data.filter((c) => c.status === "resolved").length;
+
+      setStats((prev) => ({
+        ...prev,
+        complaints: { pending, resolved },
+      }));
     } catch (err) {
       console.error("Failed to fetch complaints:", err);
     }
   };
 
-  //  SEARCH
   const handleSearch = () => {
     if (!search.trim()) return;
     navigate(`/admin/users?search=${search}`);
@@ -127,10 +129,8 @@ export default function Dashboard() {
     }).length;
   };
 
-  //  RENDER
   return (
     <div className="dashboard-container">
-      {/* MODERN HEADER */}
       <div className="dashboard-header">
         <div className="header-content">
           <div className="welcome-section">
@@ -144,38 +144,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ADMIN STATS */}
+      {/* ADMIN */}
       {user?.role === "admin" && (
         <>
           <div className="admin-stats">
-            <StatCard
-              title="Total Users"
-              value={stats.total}
-              icon={<Users size={24} />}
-              color="blue"
-              trend="+15%"
-            />
-            <StatCard
-              title="Students"
-              value={stats.students}
-              icon={<UserCheck size={24} />}
-              color="green"
-              trend="+12%"
-            />
-            <StatCard
-              title="Wardens"
-              value={stats.wardens}
-              icon={<Shield size={24} />}
-              color="orange"
-              trend="+5%"
-            />
-            <StatCard
-              title="Payments"
-              value={stats.payments}
-              icon={<CreditCard size={24} />}
-              color="purple"
-              trend="+18%"
-            />
+            <StatCard title="Total Users" value={stats.total} icon={<Users size={24} />} color="blue" trend="+15%" />
+            <StatCard title="Students" value={stats.students} icon={<UserCheck size={24} />} color="green" trend="+12%" />
+            <StatCard title="Wardens" value={stats.wardens} icon={<Shield size={24} />} color="orange" trend="+5%" />
+            <StatCard title="Payments" value={stats.payments} icon={<CreditCard size={24} />} color="purple" trend="+18%" />
           </div>
 
           <div className="analytics-section">
@@ -189,6 +165,8 @@ export default function Dashboard() {
                 <div className="analytics-value">+28%</div>
                 <div className="analytics-subtitle">vs last month</div>
               </div>
+
+              {/* 🔥 THIS WILL NOW UPDATE AUTOMATICALLY */}
               <div className="analytics-card">
                 <div className="analytics-header">
                   <AlertCircle size={20} className="pending-icon" />
@@ -203,6 +181,8 @@ export default function Dashboard() {
           </div>
         </>
       )}
+
+      {/* REST CODE SAME (NO CHANGE) */}
 
       {/* WARDEN COMPLAINTS SUMMARY */}
       {user?.role === "warden" && (

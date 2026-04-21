@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
@@ -22,17 +21,23 @@ export default function WardenComplaints() {
         ? res.data
         : res.data.complaints || [];
 
-      // Show ONLY pending complaints
-      const pendingComplaints = complaintsArray.filter(
-        (c) => c.status === "pending",
-      );
+      // 🔥 SORT BY PRIORITY (HIGH → MEDIUM → LOW)
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+
+      const pendingComplaints = complaintsArray
+        .filter((c) => c.status === "pending")
+        .sort(
+          (a, b) =>
+            priorityOrder[b.priority || "medium"] -
+            priorityOrder[a.priority || "medium"]
+        );
 
       setComplaints(pendingComplaints);
       setLoading(false);
     } catch (error) {
-      console.error("Update error:", error.response || error);
-      alert(error.response?.data?.message || "Failed to update status");
-      setProcessingId(null);
+      console.error("Fetch error:", error.response || error);
+      alert(error.response?.data?.message || "Failed to fetch complaints");
+      setLoading(false);
     }
   };
 
@@ -42,9 +47,9 @@ export default function WardenComplaints() {
 
       await API.put(`/complaints/${id}`, { status: "resolved" });
 
-      // REMOVE resolved complaint immediately from UI
-      setComplaints((prevComplaints) =>
-        prevComplaints.filter((c) => c._id !== id),
+      // Remove resolved complaint instantly from UI
+      setComplaints((prev) =>
+        prev.filter((complaint) => complaint._id !== id)
       );
 
       setProcessingId(null);
@@ -62,11 +67,14 @@ export default function WardenComplaints() {
       <h2>Warden – Student Complaints</h2>
 
       {complaints.length === 0 ? (
-        <p className="no-complaints">No pending complaints </p>
+        <p className="no-complaints">No pending complaints</p>
       ) : (
         <div className="complaints-grid">
           {complaints.map((complaint) => (
-            <div key={complaint._id} className="complaint-card">
+            <div
+              key={complaint._id}
+              className={`complaint-card ${complaint.priority || "medium"}`}
+            >
               <p>
                 <b>Student:</b> {complaint.student?.name || "Unknown"}
               </p>
@@ -79,14 +87,26 @@ export default function WardenComplaints() {
               <p>
                 <b>Title:</b> {complaint.title}
               </p>
-              {/* FIXED: show description only */}
+
               <p>
                 <b>Complaint:</b> {complaint.description}
               </p>
 
+              {/* 🔥 PRIORITY BADGE */}
+              <p>
+                <b>Priority:</b>{" "}
+                <span
+                  className={`priority ${complaint.priority || "medium"}`}
+                >
+                  {complaint.priority || "medium"}
+                </span>
+              </p>
+
               <p>
                 <b>Status:</b>{" "}
-                <span className="status pending">{complaint.status}</span>
+                <span className="status pending">
+                  {complaint.status}
+                </span>
               </p>
 
               <button
@@ -98,6 +118,7 @@ export default function WardenComplaints() {
                   ? "Processing..."
                   : "Mark as Resolved"}
               </button>
+              {/* <p><b>Priority Raw:</b> {complaint.priority}</p> */}
             </div>
           ))}
         </div>

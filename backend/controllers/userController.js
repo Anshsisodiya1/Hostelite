@@ -117,6 +117,20 @@ const getUserByIdWithProfile = async (req, res) => {
   }
 };
 
+exports.saveToken = async (req, res) => {
+  try {
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { deviceToken: req.body.token },
+      { new: true }
+    );
+
+    res.json({ message: "Token saved", user });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getMyProfile,
   getAllUsers,

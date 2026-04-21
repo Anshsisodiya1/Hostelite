@@ -19,16 +19,16 @@
     color: #555;
 }
 
-/* Complaints Grid: 2 columns on desktop */
+/* Complaints Grid */
 .complaints-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 30px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 25px;
 }
 
-/* Each Complaint Card */
+/* Complaint Card */
 .complaint-card {
-    width: 65vh;
+    width: 100%; /* ✅ FIXED (removed 65vh bug) */
     background: #fff;
     padding: 20px;
     border-radius: 10px;
@@ -37,6 +37,59 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    transition: 0.3s ease;
+}
+
+/* Hover effect (optional but nice) */
+.complaint-card:hover {
+    transform: translateY(-3px);
+}
+
+/* ============================= */
+/* 🔴 HIGH PRIORITY */
+/* ============================= */
+.complaint-card.high {
+    border-left: 6px solid #ff4d4f;
+    background: #fff5f5;
+    box-shadow: 0 0 10px rgba(255, 77, 79, 0.2);
+}
+
+/* ============================= */
+/* 🟡 MEDIUM PRIORITY */
+/* ============================= */
+.complaint-card.medium {
+    border-left: 6px solid #faad14;
+    background: #fffbe6;
+}
+
+/* ============================= */
+/* 🟢 LOW PRIORITY */
+/* ============================= */
+.complaint-card.low {
+    border-left: 6px solid #52c41a;
+    background: #f6ffed;
+}
+
+/* Priority Text */
+.priority.high {
+    color: #ff4d4f;
+    font-weight: bold;
+}
+
+.priority.medium {
+    color: #faad14;
+    font-weight: bold;
+}
+
+.priority.low {
+    color: #52c41a;
+    font-weight: bold;
+}
+
+/* Status badge (optional improvement) */
+.status.pending {
+    color: #d97706;
+    font-weight: bold;
 }
 
 /* Button */
@@ -57,7 +110,7 @@
     background-color: #15803d;
 }
 
-/* Responsive: 1 card per row on mobile */
+/* Responsive */
 @media (max-width: 600px) {
     .warden-container {
         padding: 15px;
@@ -69,7 +122,6 @@
 
     .complaint-card {
         padding: 15px;
-        margin-left: auto;
         width: 100%;
     }
 

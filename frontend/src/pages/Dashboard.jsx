@@ -3,6 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../services/api";
 import "../styles/dashboard.css";
+
+// 🔥 FIREBASE IMPORTS
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { app } from "../firebase"; // make sure firebase.js exists
+
 import {
   Users,
   UserCheck,
@@ -39,17 +44,56 @@ export default function Dashboard() {
     submitted: false,
   });
 
-  // 🔥 UPDATED: Fetch complaints also for ADMIN
+  // ==============================
+  // 🔔 FIREBASE NOTIFICATION SETUP
+  // ==============================
+  useEffect(() => {
+    if (!user) return;
+
+    const messaging = getMessaging(app);
+
+    // 🔥 PUT YOUR VAPID KEY HERE
+    const VAPID_KEY =
+      "BGvkWr3pS-UBnhLSLAprlPSDRoP76mg7UDSeT2YjmL-3YoM1dp2lvSy0p4WtDs-Yn4cRvCDFD6kFsRsGG1tFsSc";
+
+    // Request permission + get token
+    Notification.requestPermission().then(async (permission) => {
+      if (permission === "granted") {
+        try {
+          const token = await getToken(messaging, {
+            vapidKey: VAPID_KEY,
+          });
+
+          if (token) {
+            // Send token to backend
+            await API.post("/users/save-token", { token });
+          }
+        } catch (err) {
+          console.error("Token error:", err);
+        }
+      }
+    });
+
+    // Foreground notification
+    onMessage(messaging, (payload) => {
+      alert(payload.notification?.title + " - " + payload.notification?.body);
+    });
+  }, [user]);
+
+  // ==============================
+  // FETCH DATA BASED ON ROLE
+  // ==============================
   useEffect(() => {
     if (!user) return;
 
     if (user.role === "admin") {
       fetchStats();
-      fetchComplaints(); // ✅ IMPORTANT
+      fetchComplaints();
     } else if (user.role === "warden") {
       fetchComplaints();
     } else if (user.role === "student") {
       fetchProfileStatus();
+      fetchComplaints(); // ✅ IMPORTANT
     }
   }, [user]);
 
@@ -68,8 +112,6 @@ export default function Dashboard() {
     }
   };
 
-  // 🔥 REMOVED duplicate useEffect (clean)
-  
   const fetchStats = async () => {
     try {
       const res = await API.get("/users");
@@ -90,7 +132,6 @@ export default function Dashboard() {
     }
   };
 
-  // 🔥 UPDATED: calculate pending + resolved dynamically
   const fetchComplaints = async () => {
     try {
       const res = await API.get("/complaints");
@@ -98,7 +139,6 @@ export default function Dashboard() {
 
       setComplaints(data);
 
-      // ✅ COUNT dynamically
       const pending = data.filter((c) => c.status === "pending").length;
       const resolved = data.filter((c) => c.status === "resolved").length;
 
@@ -129,6 +169,24 @@ export default function Dashboard() {
     }).length;
   };
 
+  // ==============================
+  // ✅ STUDENT BADGE LOGIC (NEW)
+  // ==============================
+  const studentPending = complaints.filter(
+    (c) => c.status === "pending",
+  ).length;
+
+  const studentResolved = complaints.filter(
+    (c) => c.status === "resolved",
+  ).length;
+
+  const studentBadge =
+    studentPending > 0
+      ? `${studentPending} Pending`
+      : studentResolved > 0
+        ? "All Resolved"
+        : "No Complaints";
+
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
@@ -144,125 +202,83 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ADMIN */}
+      {/* ================= ADMIN ================= */}
       {user?.role === "admin" && (
         <>
           <div className="admin-stats">
-            <StatCard title="Total Users" value={stats.total} icon={<Users size={24} />} color="blue" trend="+15%" />
-            <StatCard title="Students" value={stats.students} icon={<UserCheck size={24} />} color="green" trend="+12%" />
-            <StatCard title="Wardens" value={stats.wardens} icon={<Shield size={24} />} color="orange" trend="+5%" />
-            <StatCard title="Payments" value={stats.payments} icon={<CreditCard size={24} />} color="purple" trend="+18%" />
+            <StatCard
+              title="Total Users"
+              value={stats.total}
+              icon={<Users size={24} />}
+              color="blue"
+            />
+            <StatCard
+              title="Students"
+              value={stats.students}
+              icon={<UserCheck size={24} />}
+              color="green"
+            />
+            <StatCard
+              title="Wardens"
+              value={stats.wardens}
+              icon={<Shield size={24} />}
+              color="orange"
+            />
+            <StatCard
+              title="Payments"
+              value={stats.payments}
+              icon={<CreditCard size={24} />}
+              color="purple"
+            />
           </div>
 
           <div className="analytics-section">
             <h2>Quick Analytics</h2>
             <div className="analytics-grid">
               <div className="analytics-card">
-                <div className="analytics-header">
-                  <TrendingUp size={20} className="trending-up" />
-                  <span>User Growth</span>
-                </div>
+                <TrendingUp size={20} />
+                <span>User Growth</span>
                 <div className="analytics-value">+28%</div>
-                <div className="analytics-subtitle">vs last month</div>
               </div>
 
-              {/* 🔥 THIS WILL NOW UPDATE AUTOMATICALLY */}
               <div className="analytics-card">
-                <div className="analytics-header">
-                  <AlertCircle size={20} className="pending-icon" />
-                  <span>Pending Complaints</span>
-                </div>
+                <AlertCircle size={20} />
+                <span>Pending Complaints</span>
                 <div className="analytics-value">
                   {stats.complaints.pending}
                 </div>
-                <div className="analytics-subtitle">Need attention</div>
               </div>
             </div>
           </div>
         </>
       )}
 
-      {/* REST CODE SAME (NO CHANGE) */}
-
-      {/* WARDEN COMPLAINTS SUMMARY */}
+      {/* ================= WARDEN ================= */}
       {user?.role === "warden" && (
         <div className="warden-summary">
           <div className="summary-cards">
             <div className="summary-card pending">
               <AlertTriangle size={24} />
-              <div className="summary-content">
-                <h3>Pending Complaints</h3>
-                <div className="summary-value">
-                  {complaints.filter((c) => c.status === "pending").length}
-                </div>
+              <h3>Pending</h3>
+              <div>
+                {complaints.filter((c) => c.status === "pending").length}
               </div>
             </div>
+
             <div className="summary-card resolved">
               <CheckCircle size={24} />
-              <div className="summary-content">
-                <h3>Resolved Today</h3>
-                <div className="summary-value">{countResolvedToday()}</div>
-              </div>
+              <h3>Resolved Today</h3>
+              <div>{countResolvedToday()}</div>
             </div>
           </div>
-
-          {complaints.length > 0 && (
-            <div className="recent-complaints">
-              <h3>Recent Complaints</h3>
-              <div className="complaint-list">
-                {complaints.slice(0, 2).map((complaint) => (
-                  <div
-                    key={complaint._id}
-                    className={`complaint-item ${complaint.status}`}
-                  >
-                    <div className="complaint-priority">
-                      {complaint.priority === "high" && (
-                        <AlertCircle size={16} />
-                      )}
-                      {complaint.priority === "medium" && <Clock size={16} />}
-                      {complaint.priority === "low" && (
-                        <CheckCircle size={16} />
-                      )}
-                    </div>
-                    <div className="complaint-content">
-                      <p>{complaint.title || complaint.description}</p>
-                      <span className={`status-badge ${complaint.status}`}>
-                        {complaint.status}
-                      </span>
-                    </div>
-                    {complaint.status === "pending" && (
-                      <button
-                        className="resolve-btn"
-                        onClick={async () => {
-                          try {
-                            await API.put(`/complaints/${complaint._id}`, {
-                              status: "resolved",
-                            });
-                            fetchComplaints();
-                          } catch (err) {
-                            console.error(
-                              "Failed to update complaint:",
-                              err.response?.data || err.message,
-                            );
-                            alert("Failed to update status");
-                          }
-                        }}
-                      >
-                        Resolve
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       )}
 
-      {/* DASHBOARD CARDS */}
+      {/* ================= DASHBOARD CARDS ================= */}
       <div className="dashboard-grid">
         {user?.role === "student" && (
           <>
+            {/* ✅ PROFILE CARD (RESTORED) */}
             <DashboardCard
               title={
                 profileStatus.submitted
@@ -279,19 +295,28 @@ export default function Dashboard() {
               onClick={() => navigate("/student/profile")}
             />
 
+            {/* ✅ COMPLAINT CARD (UPDATED BADGE LOGIC) */}
             <DashboardCard
               title="Complaint Status"
               description="Track your hostel complaints"
               icon={<Wrench size={32} />}
-              badge={`${complaints.filter((c) => c.status === "pending").length} Pending`}
+              badge={
+                complaints.filter((c) => c.status === "pending").length > 0
+                  ? `${complaints.filter((c) => c.status === "pending").length} Pending`
+                  : complaints.filter((c) => c.status === "resolved").length > 0
+                    ? "All Resolved"
+                    : "No Complaints"
+              }
               onClick={() => navigate("/complaints")}
             />
+
             <DashboardCard
               title="Fee Payment"
               description="Pay hostel fees online"
               icon={<CreditCard size={32} />}
               onClick={() => navigate("/payments")}
             />
+
             <DashboardCard
               title="Today's Meals"
               description="See today's meal plan"
@@ -310,9 +335,10 @@ export default function Dashboard() {
               badge={`${complaints.filter((c) => c.status === "pending").length} Pending`}
               onClick={() => navigate("/warden/complaints")}
             />
+
             <DashboardCard
               title="Meal Reports"
-              description="Update daily meal plans"
+              description="Update meals"
               icon={<Utensils size={32} />}
               onClick={() => navigate("/warden/meals")}
             />
@@ -323,30 +349,16 @@ export default function Dashboard() {
           <>
             <DashboardCard
               title="Manage Users"
-              description="Edit roles & user data"
               icon={<Users size={32} />}
               onClick={() => navigate("/admin/users")}
             />
             <DashboardCard
-              title="View Payments"
-              description="Check hostel payments"
+              title="Payments"
               icon={<CreditCard size={32} />}
               onClick={() => navigate("/admin/payments")}
             />
-
-            <DashboardCard
-              title="Hostel Reports"
-              description="Generate system reports"
-              icon={<FileText size={32} />}
-              onClick={() => navigate("/admin/under-construction")}
-            />
-
-            <DashboardCard
-              title="System Settings"
-              description="Configure system preferences"
-              icon={<Settings size={32} />}
-              onClick={() => navigate("/admin/system-settings")}
-            />
+            <DashboardCard title="Reports" icon={<FileText size={32} />} />
+            <DashboardCard title="Settings" icon={<Settings size={32} />} />
           </>
         )}
       </div>
@@ -354,7 +366,7 @@ export default function Dashboard() {
   );
 }
 
-//  COMPONENTS
+// ================= COMPONENTS =================
 function DashboardCard({ title, description, onClick, icon, badge }) {
   return (
     <div className="dashboard-card" onClick={onClick}>
@@ -369,14 +381,13 @@ function DashboardCard({ title, description, onClick, icon, badge }) {
   );
 }
 
-function StatCard({ title, value, icon, color, trend }) {
+function StatCard({ title, value, icon, color }) {
   return (
     <div className={`stat-card ${color}`}>
       <div className="stat-icon">{icon}</div>
-      <div className="stat-content">
+      <div>
         <h4>{title}</h4>
-        <p className="stat-value">{value}</p>
-        {trend && <span className="stat-trend">{trend}</span>}
+        <p>{value}</p>
       </div>
     </div>
   );

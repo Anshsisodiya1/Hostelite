@@ -9,9 +9,7 @@ const {
 const { authMiddleware } = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 
-// console.log("authMiddleware:", authMiddleware);
-// console.log("roleMiddleware:", roleMiddleware);
-// console.log("roleMiddleware(['admin']):", roleMiddleware(["admin"]));
+
 
 const router = express.Router();
 

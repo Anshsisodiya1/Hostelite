@@ -22,10 +22,25 @@ const complaintSchema = new mongoose.Schema(
       minlength: 10,
       trim: true,
     },
+
+    // ✅ UPDATED STATUS (more realistic)
     status: {
       type: String,
-      enum: ["pending", "resolved"],
+      enum: ["pending", "in-progress", "resolved"],
       default: "pending",
+    },
+
+    // ✅ NEW FIELD (Priority / Severity)
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
+
+    // ✅ OPTIONAL (for notification tracking)
+    isNotified: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

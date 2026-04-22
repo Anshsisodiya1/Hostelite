@@ -44,12 +44,10 @@ export default function AdminUsers() {
     }
   };
 
-  // OPEN PROFILE USING PROFILE ID
   const openProfile = async (userId) => {
     try {
       const res = await API.get(`/profile/user/${userId}`);
       const profileId = res.data._id;
-
       navigate(`/admin/student/${profileId}`);
     } catch (err) {
       alert("Profile not updated yet");
@@ -85,12 +83,9 @@ export default function AdminUsers() {
   const submitEdit = async (id) => {
     try {
       setProcessingUser(id);
-
       await API.put(`/users/${id}`, formData);
-
       await fetchUsers();
       await fetchRooms();
-
       cancelEdit();
     } catch (err) {
       alert(err.response?.data?.message || "Failed to update user");
@@ -119,6 +114,14 @@ export default function AdminUsers() {
     <div className="admin-users-container">
       <div className="users-card">
         <h2>Manage Users</h2>
+
+        {/* ✅ NEW BUTTON ADDED */}
+        <button
+          className="add-user-btn"
+          onClick={() => navigate("/admin/register")}
+        >
+          + Register User
+        </button>
 
         <input
           type="text"
@@ -177,27 +180,19 @@ export default function AdminUsers() {
                 <td>{user.role}</td>
 
                 <td>
-                  {editingUser === user._id &&
-                  user.role === "student" ? (
+                  {editingUser === user._id && user.role === "student" ? (
                     <select
                       value={formData.room}
                       onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          room: e.target.value,
-                        })
+                        setFormData({ ...formData, room: e.target.value })
                       }
                     >
                       <option value="">Select Room</option>
-
                       {rooms.map((room) => (
                         <option
                           key={room._id}
                           value={room._id}
-                          disabled={
-                            room.isOccupied &&
-                            room._id !== formData.room
-                          }
+                          disabled={room.isOccupied && room._id !== formData.room}
                         >
                           {room.roomNumber}
                         </option>
@@ -212,29 +207,20 @@ export default function AdminUsers() {
                   {user.role !== "admin" ? (
                     editingUser === user._id ? (
                       <>
-                        <button onClick={() => submitEdit(user._id)}>
-                          Save
-                        </button>
-                        <button onClick={cancelEdit}>
-                          Cancel
-                        </button>
+                        <button onClick={() => submitEdit(user._id)}>Save</button>
+                        <button onClick={cancelEdit}>Cancel</button>
                       </>
                     ) : (
                       <>
-                        <button onClick={() => startEdit(user)}>
-                          Edit
-                        </button>
-                        <button onClick={() => deleteUser(user._id)}>
-                          Delete
-                        </button>
+                        <button onClick={() => startEdit(user)}>Edit</button>
+                        <button onClick={() => deleteUser(user._id)}>Delete</button>
                       </>
                     )
                   ) : (
                     "Admin"
                   )}
 
-                  {processingUser === user._id &&
-                    " Processing..."}
+                  {processingUser === user._id && " Processing..."}
                 </td>
               </tr>
             ))}

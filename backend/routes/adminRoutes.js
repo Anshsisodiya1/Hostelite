@@ -16,9 +16,6 @@ const checkAdmin = (req, res, next) => {
 router.get("/complaints", authMiddleware, checkAdmin, adminController.getAllComplaints);
 router.put("/complaints/:complaintId", authMiddleware, checkAdmin, adminController.updateComplaintStatus);
 
-// RATINGS ROUTES
-router.get("/ratings", authMiddleware, checkAdmin, adminController.getAllRatings);
-router.delete("/ratings/:ratingId", authMiddleware, checkAdmin, adminController.deleteRating);
 
 // PAYMENTS ROUTES
 router.get("/payments", authMiddleware, checkAdmin, adminController.getAllPayments);

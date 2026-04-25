@@ -10,7 +10,6 @@ const createRooms = async (req, res) => {
       return res.status(400).json({ message: "Invalid number of rooms" });
     }
 
-    // Check if rooms already exist
     const existingRooms = await Room.countDocuments();
 
     if (existingRooms > 0) {
@@ -25,6 +24,7 @@ const createRooms = async (req, res) => {
       rooms.push({
         roomNumber: `R-${i}`,
         isOccupied: false,
+        floor: null, 
       });
     }
 
@@ -41,7 +41,10 @@ const createRooms = async (req, res) => {
 // ===== GET ALL ROOMS =====
 const getAllRooms = async (req, res) => {
   try {
-    const rooms = await Room.find().populate("assignedTo", "name email");
+    const rooms = await Room.find()
+      .populate("assignedTo", "name email")
+      .populate("floor", "floorNumber"); // 🔥 NEW
+
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ message: "Error fetching rooms" });
@@ -51,14 +54,16 @@ const getAllRooms = async (req, res) => {
 // ===== GET AVAILABLE ROOMS =====
 const getAvailableRooms = async (req, res) => {
   try {
-    const rooms = await Room.find({ isOccupied: false });
+    const rooms = await Room.find({ isOccupied: false })
+      .populate("floor", "floorNumber"); // optional
+
     res.json(rooms);
   } catch (error) {
     res.status(500).json({ message: "Error fetching available rooms" });
   }
 };
 
-// ===== ASSIGN ROOM =====
+// ===== ASSIGN ROOM TO STUDENT =====
 const assignRoom = async (req, res) => {
   try {
     const { studentId, roomId } = req.body;
@@ -119,10 +124,105 @@ const unassignRoom = async (req, res) => {
   }
 };
 
+// ===== ASSIGN ROOM TO FLOOR ===== 🔥 NEW
+const assignRoomToFloor = async (req, res) => {
+  try {
+    const { roomId, floorId } = req.body;
+
+    const room = await Room.findById(roomId);
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    room.floor = floorId;
+    await room.save();
+
+    res.json({ message: "Room assigned to floor successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to assign room to floor" });
+  }
+};
+
+// ===== BULK ASSIGN ROOMS TO FLOOR =====
+
+
+const bulkAssignRoomsToFloor = async (req, res) => {
+  try {
+    const { start, end, floorId, force } = req.body;
+
+    const roomNumbers = [];
+    for (let i = start; i <= end; i++) {
+      roomNumbers.push(`R-${i}`);
+    }
+
+    // 🔍 find already assigned rooms
+    const alreadyAssigned = await Room.find({
+      roomNumber: { $in: roomNumbers },
+      floor: { $ne: null },
+    });
+
+    // ❌ block only if NOT force
+    if (alreadyAssigned.length > 0 && !force) {
+      return res.status(400).json({
+        message: "Rooms already assigned",
+        rooms: alreadyAssigned.map((r) => r.roomNumber),
+      });
+    }
+
+    // ✅ allow overwrite
+    const result = await Room.updateMany(
+      { roomNumber: { $in: roomNumbers } },
+      { $set: { floor: floorId } }
+    );
+
+    res.json({
+      message: "Rooms assigned successfully",
+      matched: result.matchedCount,
+      modified: result.modifiedCount,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Bulk assignment failed" });
+  }
+};
+const deleteAllRooms = async (req, res) => {
+  try {
+    // OPTIONAL SAFETY CHECK (recommended for admin only)
+    // if (req.user.role !== "admin") {
+    //   return res.status(403).json({ message: "Access denied" });
+    // }
+
+    // Step 1: Unassign rooms from users
+    await User.updateMany(
+      { room: { $ne: null } },
+      { $set: { room: null } }
+    );
+
+    // Step 2: Delete all rooms
+    const result = await Room.deleteMany({});
+
+    res.json({
+      message: "All rooms deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to delete rooms" });
+  }
+};
+
 module.exports = {
   createRooms,
   getAllRooms,
   getAvailableRooms,
   assignRoom,
   unassignRoom,
+  assignRoomToFloor, // NEW EXPORT
+  bulkAssignRoomsToFloor,
+  deleteAllRooms,
 };

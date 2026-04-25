@@ -23,16 +23,30 @@ import AdvancePayment from "./pages/AdvancePayment";
 import RazorpayPayment from "./pages/RazorpayPayment";
 import UpiPayment from "./pages/UpiPayment";
 import DebitCardPayment from "./pages/DebitCardPayment";
+import AddHostel from "./pages/AddHostel";
+
+import { Toaster } from "react-hot-toast";
 
 export default function App() {
   return (
     <BrowserRouter>
+      {/* ✅ MOVE TOASTER HERE */}
+      <Toaster position="top-right" reverseOrder={false} />
+
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
         <Route path="/" element={<LoginPage />} />
-        <Route path="/register" element={<Register />} />
 
         {/* ================= PROTECTED ROUTES ================= */}
+        <Route
+          path="/register"
+          element={
+            <ProtectedRoute role="admin">
+              <Register />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           element={
             <ProtectedRoute>
@@ -56,6 +70,7 @@ export default function App() {
             path="/ratings"
             element={
               <ProtectedRoute role="student">
+                <div>Ratings Page</div>
               </ProtectedRoute>
             }
           />
@@ -134,6 +149,7 @@ export default function App() {
             }
           />
         </Route>
+
         <Route path="/warden/meals" element={<WardenMeals />} />
         <Route path="/student/meals" element={<StudentMeals />} />
         <Route
@@ -144,11 +160,21 @@ export default function App() {
 
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/student/profile" element={<StudentProfile />} />
+
         <Route
           path="/admin/student/:id"
           element={
             <ProtectedRoute role="admin">
               <AdminStudentProfile />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/add-hostel"
+          element={
+            <ProtectedRoute role="admin">
+              <AddHostel />
             </ProtectedRoute>
           }
         />

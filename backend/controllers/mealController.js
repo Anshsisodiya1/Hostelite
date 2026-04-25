@@ -1,6 +1,6 @@
 const Meal = require("../models/Meal");
 const User = require("../models/User");
-const sendMealMail = require("../config/sendMail"); // ✅ FIXED
+const sendMealMail = require("../config/sendMail"); 
 
 // WARDEN → create/update today meal
 exports.saveTodayMeal = async (req, res) => {

@@ -1,119 +1,305 @@
 /* =========================
-   SYSTEM SETTINGS STYLES
-   Professional & Minimal
+   ROOT (MODERN TOKENS)
+========================= */
+
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e5e7eb;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --primary: #2563eb;
+  --hover: #f1f5f9;
+}
+
+/* =========================
+   BASE CONTAINER
 ========================= */
 
 .system-container {
-  padding: 40px 60px;
-  background-color: #f4f6f9;
+  max-width: 1100px;
+  margin: auto;
+  padding: 28px;
+  font-family: Inter, ui-sans-serif, system-ui;
+  background: var(--bg);
   min-height: 100vh;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--text);
 }
 
-.system-title {
-  font-size: 26px;
+/* TITLE */
+.system-container h2 {
+  font-size: 24px;
   font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 30px;
-}
-
-/* ================= FORM CARD ================= */
-
-.card {
-  background: #ffffff;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  max-width: 500px;
-}
-
-.card label {
-  font-weight: 500;
-  color: #374151;
-  font-size: 14px;
-}
-
-.card input {
-  width: 100%;
-  padding: 10px 12px;
-  margin-top: 8px;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 14px;
-  transition: 0.3s ease;
-}
-
-.card input:focus {
-  border-color: #2563eb;
-  outline: none;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
-}
-
-.primary-btn {
-  margin-top: 20px;
-  padding: 10px 20px;
-  border: none;
-  background-color: #1f2937;
-  color: white;
-  border-radius: 6px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: 0.3s ease;
-}
-
-.primary-btn:hover {
-  background-color: #111827;
-}
-
-.primary-btn:disabled {
-  background-color: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* ================= MESSAGE ================= */
-
-.success-message {
-  margin-top: 15px;
-  font-size: 14px;
-  color: #16a34a;
-}
-
-/* ================= STATISTICS ================= */
-
-.stats-section {
-  margin-top: 40px;
-}
-
-.stats-title {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1f2937;
   margin-bottom: 20px;
 }
 
+/* =========================
+   GRID (HOME)
+========================= */
+
+.two-column {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   CARD (CLEAN STYLE)
+========================= */
+
+.card,
+.floor-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  transition: 0.2s ease;
+}
+
+.card:hover,
+.floor-card:hover {
+  background: var(--hover);
+}
+
+/* CLICKABLE */
+.clickable {
+  cursor: pointer;
+}
+
+.no-underline,
+.no-underline * {
+  text-decoration: none !important;
+}
+
+/* =========================
+   FLEX LAYOUT
+========================= */
+
+.flex-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.small-card {
+  flex: 1;
+  min-width: 260px;
+  max-width: 340px;
+}
+
+/* =========================
+   BUTTONS (MODERN)
+========================= */
+
+button {
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+/* BACK BUTTON */
+.system-container > button {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.system-container > button:hover {
+  background: var(--hover);
+}
+
+/* DELETE BUTTON (SUBTLE) */
+.delete-btn {
+  background: #111827;
+}
+
+.delete-btn:hover {
+  background: #000;
+}
+
+/* =========================
+   INPUTS
+========================= */
+
+input,
+select {
+  width: 100%;
+  padding: 9px 10px;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+}
+
+input:focus,
+select:focus {
+  border-color: var(--primary);
+}
+
+/* =========================
+   STATS (MINIMAL)
+========================= */
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .stat-card {
-  background: #ffffff;
-  padding: 20px;
-  border-radius: 8px;
-  border-left: 4px solid #1f2937;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.04);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
 }
 
 .stat-card h4 {
-  font-size: 14px;
-  font-weight: 500;
-  color: #6b7280;
-  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
 }
 
 .stat-card p {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
-  color: #111827;
+  margin-top: 4px;
+}
+
+/* =========================
+   FLOOR GRID
+========================= */
+
+.compact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-top: 14px;
+}
+
+@media (max-width: 1000px) {
+  .compact-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .compact-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   FLOOR CARD
+========================= */
+
+.compact-card {
+  padding: 12px;
+}
+
+.floor-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.floor-top h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.floor-top span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.floor-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.floor-actions button {
+  font-size: 11px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: #f3f4f6;
+  color: #111;
+}
+
+.floor-actions button:hover {
+  background: #e5e7eb;
+}
+
+/* =========================
+   FLOOR BAR
+========================= */
+
+.compact-bar {
+  max-width: 200px;
+  padding: 10px;
+  margin-top: 12px;
+}
+
+/* =========================
+   ROOM UI
+========================= */
+
+.room-box {
+  margin-top: 16px;
+}
+
+.room-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.room-chip {
+  background: #f1f5f9;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid var(--border);
+}
+
+/* =========================
+   GLOBAL SMOOTHNESS
+========================= */
+
+* {
+  transition: all 0.15s ease;
 }

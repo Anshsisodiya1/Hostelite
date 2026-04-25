@@ -5,9 +5,12 @@ import "../styles/WardenComplaints.css";
 
 export default function WardenComplaints() {
   const { user } = useAuth();
+
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
+
+  const [tab, setTab] = useState("pending"); // 🔥 NEW
 
   useEffect(() => {
     fetchComplaints();
@@ -17,26 +20,14 @@ export default function WardenComplaints() {
     try {
       const res = await API.get("/complaints");
 
-      const complaintsArray = Array.isArray(res.data)
+      const data = Array.isArray(res.data)
         ? res.data
         : res.data.complaints || [];
 
-      // 🔥 SORT BY PRIORITY (HIGH → MEDIUM → LOW)
-      const priorityOrder = { high: 3, medium: 2, low: 1 };
-
-      const pendingComplaints = complaintsArray
-        .filter((c) => c.status === "pending")
-        .sort(
-          (a, b) =>
-            priorityOrder[b.priority || "medium"] -
-            priorityOrder[a.priority || "medium"]
-        );
-
-      setComplaints(pendingComplaints);
+      setComplaints(data);
       setLoading(false);
     } catch (error) {
-      console.error("Fetch error:", error.response || error);
-      alert(error.response?.data?.message || "Failed to fetch complaints");
+      console.error("Fetch error:", error);
       setLoading(false);
     }
   };
@@ -45,11 +36,14 @@ export default function WardenComplaints() {
     try {
       setProcessingId(id);
 
-      await API.put(`/complaints/${id}`, { status: "resolved" });
+      await API.put(`/complaints/${id}`, {
+        status: "resolved",
+      });
 
-      // Remove resolved complaint instantly from UI
       setComplaints((prev) =>
-        prev.filter((complaint) => complaint._id !== id)
+        prev.map((c) =>
+          c._id === id ? { ...c, status: "resolved" } : c
+        )
       );
 
       setProcessingId(null);
@@ -62,65 +56,99 @@ export default function WardenComplaints() {
 
   if (loading) return <h3>Loading complaints...</h3>;
 
+  // ================= FILTER LOGIC =================
+  const pendingComplaints = complaints.filter(
+    (c) => c.status === "pending"
+  );
+
+  const historyComplaints = complaints.filter(
+    (c) => c.status === "resolved"
+  );
+
+  const activeList =
+    tab === "pending" ? pendingComplaints : historyComplaints;
+
   return (
     <div className="warden-container">
-      <h2>Warden – Student Complaints</h2>
+      <h2>Warden Dashboard</h2>
 
-      {complaints.length === 0 ? (
-        <p className="no-complaints">No pending complaints</p>
+      {/* ================= TABS ================= */}
+      <div className="tabs">
+        <button
+          className={tab === "pending" ? "active" : ""}
+          onClick={() => setTab("pending")}
+        >
+          Pending ({pendingComplaints.length})
+        </button>
+
+        <button
+          className={tab === "history" ? "active" : ""}
+          onClick={() => setTab("history")}
+        >
+          Complaint History ({historyComplaints.length})
+        </button>
+      </div>
+
+      {/* ================= LIST ================= */}
+      {activeList.length === 0 ? (
+        <p className="no-complaints">No complaints found</p>
       ) : (
         <div className="complaints-grid">
-          {complaints.map((complaint) => (
-            <div
-              key={complaint._id}
-              className={`complaint-card ${complaint.priority || "medium"}`}
-            >
-              <p>
-                <b>Student:</b> {complaint.student?.name || "Unknown"}
-              </p>
+          {activeList.map((c) => {
+            const roomNo = c.room?.roomNumber || "Not Assigned";
+            const floorNo = c.floor?.floorNumber || "Not Assigned";
 
-              <p>
-                <b>Room No:</b>{" "}
-                {complaint.student?.roomNumber || "Not Assigned"}
-              </p>
-
-              <p>
-                <b>Title:</b> {complaint.title}
-              </p>
-
-              <p>
-                <b>Complaint:</b> {complaint.description}
-              </p>
-
-              {/* 🔥 PRIORITY BADGE */}
-              <p>
-                <b>Priority:</b>{" "}
-                <span
-                  className={`priority ${complaint.priority || "medium"}`}
-                >
-                  {complaint.priority || "medium"}
-                </span>
-              </p>
-
-              <p>
-                <b>Status:</b>{" "}
-                <span className="status pending">
-                  {complaint.status}
-                </span>
-              </p>
-
-              <button
-                className="resolve-btn"
-                disabled={processingId === complaint._id}
-                onClick={() => markAsResolved(complaint._id)}
+            return (
+              <div
+                key={c._id}
+                className={`complaint-card ${c.priority || "medium"}`}
               >
-                {processingId === complaint._id
-                  ? "Processing..."
-                  : "Mark as Resolved"}
-              </button>
-              {/* <p><b>Priority Raw:</b> {complaint.priority}</p> */}
-            </div>
-          ))}
+                <p>
+                  <b>Student:</b> {c.student?.name || "Unknown"}
+                </p>
+
+                <p>
+                  <b>Room No:</b> {roomNo}
+                </p>
+
+                <p>
+                  <b>Floor No:</b> {floorNo}
+                </p>
+
+                <p>
+                  <b>Title:</b> {c.title}
+                </p>
+
+                <p>
+                  <b>Complaint:</b> {c.description}
+                </p>
+
+                <p>
+                  <b>Priority:</b>{" "}
+                  <span className={`priority ${c.priority}`}>
+                    {c.priority}
+                  </span>
+                </p>
+
+                <p>
+                  <b>Status:</b> {c.status}
+                </p>
+
+                {/* ================= BUTTON ONLY FOR PENDING ================= */}
+                {tab === "pending" && (
+                  <button
+                    className="resolve-btn"
+                    disabled={processingId === c._id}
+                    onClick={() => markAsResolved(c._id)}
+                  >
+                    {processingId === c._id
+                      ? "Processing..."
+                      : "Mark as Resolved"}
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

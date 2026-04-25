@@ -18,9 +18,13 @@ const roomSchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
+    floor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Floor",
+      default: null,
+    },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 module.exports = mongoose.model("Room", roomSchema);
-

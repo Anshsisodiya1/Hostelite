@@ -3,101 +3,137 @@ const Complaint = require("../models/Complaint");
 const User = require("../models/User");
 
 // ==============================
-// STUDENT: Submit Complaint
+// STUDENT: SUBMIT COMPLAINT
 // ==============================
 exports.submitComplaint = async (req, res) => {
   try {
     const { title, description, priority } = req.body;
 
-    if (!title || !title.trim()) {
+    if (!title?.trim()) {
       return res.status(400).json({ message: "Title is required" });
     }
 
     if (!description || description.trim().length < 10) {
       return res.status(400).json({
-        message: "Complaint description must be at least 10 characters long",
+        message: "Description must be at least 10 characters",
       });
     }
 
-    const validPriorities = ["low", "medium", "high"];
-    if (priority && !validPriorities.includes(priority)) {
-      return res.status(400).json({ message: "Invalid priority value" });
+    const student = await User.findById(req.user._id).populate({
+      path: "room",
+      populate: { path: "floor" },
+    });
+
+    if (!student) return res.status(404).json({ message: "Student not found" });
+
+    if (!student.room) {
+      return res.status(400).json({ message: "Room not assigned" });
     }
 
-    const warden = await User.findOne({ role: "warden" });
+    if (!student.room.floor) {
+      return res.status(400).json({ message: "Floor not assigned" });
+    }
+
+    const warden = await User.findOne({
+      role: "warden",
+      floor: student.room.floor._id,
+    });
+
     if (!warden) {
-      return res.status(400).json({ message: "No warden available" });
+      return res.status(400).json({
+        message: "No warden assigned for this floor",
+      });
     }
 
-    const newComplaint = new Complaint({
-      student: req.user._id,
+    const complaint = await Complaint.create({
+      student: student._id,
       warden: warden._id,
       title: title.trim(),
       description: description.trim(),
-      status: "pending",
       priority: priority || "medium",
-      isNotified: false,
+      room: student.room._id,
+      floor: student.room.floor._id,
     });
-
-    await newComplaint.save();
 
     res.status(201).json({
       message: "Complaint submitted successfully",
-      complaint: newComplaint,
+      complaint,
     });
   } catch (error) {
-    console.error("Error submitting complaint:", error);
-    res.status(500).json({ message: error.message || "Server error" });
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };
 
 // ==============================
-// GET Complaints (Role Based)
+// GET COMPLAINTS (FIXED POPULATION)
 // ==============================
 exports.getComplaints = async (req, res) => {
   try {
     const user = req.user;
     let complaints;
 
+    // 🔥 LAST 7 DAYS FILTER
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const basePopulate = [
+      { path: "student", select: "name email" },
+      { path: "room", select: "roomNumber" },
+      { path: "floor", select: "floorNumber" },
+      { path: "warden", select: "name" },
+    ];
+
+    // ================= STUDENT =================
     if (user.role === "student") {
-      complaints = await Complaint.find({ student: user._id })
-        .populate("student", "name email roomNumber")
-        .populate("warden", "name")
-        .sort({ priority: -1, createdAt: -1 });
-    } else if (user.role === "warden") {
-      complaints = await Complaint.find({ warden: user._id }).populate(
-        "student",
-        "name email roomNumber",
+      complaints = await Complaint.find({
+        student: user._id,
+        createdAt: { $gte: sevenDaysAgo }, // 🔥 only last 7 days
+      })
+        .populate(basePopulate)
+        .sort({ createdAt: -1 });
+    }
+
+    // ================= WARDEN =================
+    else if (user.role === "warden") {
+      complaints = await Complaint.find({
+        warden: user._id,
+        createdAt: { $gte: sevenDaysAgo }, // 🔥 only last 7 days
+      })
+        .populate(basePopulate)
+        .sort({ createdAt: -1 });
+
+      // priority sorting
+      const priorityOrder = { high: 1, medium: 2, low: 3 };
+
+      complaints.sort(
+        (a, b) =>
+          priorityOrder[a.priority] - priorityOrder[b.priority]
       );
+    }
 
-      // 🔥 CUSTOM PRIORITY SORT
-      const priorityOrder = {
-        high: 1,
-        medium: 2,
-        low: 3,
-      };
+    // ================= ADMIN =================
+    else if (user.role === "admin") {
+      complaints = await Complaint.find({
+        createdAt: { $gte: sevenDaysAgo }, // 🔥 optional but recommended
+      })
+        .populate(basePopulate)
+        .sort({ createdAt: -1 });
+    }
 
-      complaints.sort((a, b) => {
-        return priorityOrder[a.priority] - priorityOrder[b.priority];
-      });
-    } else if (user.role === "admin") {
-      complaints = await Complaint.find()
-        .populate("student", "name email roomNumber")
-        .populate("warden", "name")
-        .sort({ priority: -1, createdAt: -1 });
-    } else {
+    else {
       return res.status(403).json({ message: "Access denied" });
     }
 
     res.status(200).json(complaints);
+
   } catch (error) {
-    console.error("Error fetching complaints:", error);
-    res.status(500).json({ message: error.message || "Server error" });
+    console.error(error);
+    res.status(500).json({ message: error.message });
   }
 };
-
 // ==============================
-// WARDEN / ADMIN: Update Status
+// UPDATE STATUS
 // ==============================
 exports.updateComplaintStatus = async (req, res) => {
   try {
@@ -105,11 +141,7 @@ exports.updateComplaintStatus = async (req, res) => {
 
     const validStatuses = ["pending", "in-progress", "resolved"];
     if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
-
-    if (req.user.role !== "warden" && req.user.role !== "admin") {
-      return res.status(403).json({ message: "Access denied" });
+      return res.status(400).json({ message: "Invalid status" });
     }
 
     const complaint = await Complaint.findById(req.params.id);
@@ -118,20 +150,9 @@ exports.updateComplaintStatus = async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    if (req.user.role === "warden" && !complaint.warden.equals(req.user._id)) {
-      return res
-        .status(403)
-        .json({ message: "Not authorized for this complaint" });
-    }
-
     complaint.status = status;
 
-    // ==============================
-    // 🔔 FIREBASE NOTIFICATION
-    // ==============================
     if (status === "resolved") {
-      complaint.isNotified = false;
-
       const student = await User.findById(complaint.student);
 
       if (student?.deviceToken) {
@@ -139,34 +160,31 @@ exports.updateComplaintStatus = async (req, res) => {
           await admin.messaging().send({
             notification: {
               title: "Hostelite",
-              body: `Your complaint "${complaint.title}" has been resolved ✅`,
+              body: `Complaint "${complaint.title}" resolved`,
             },
             token: student.deviceToken,
           });
-
-          console.log("🔔 Notification sent successfully");
         } catch (err) {
-          console.error("❌ Notification error:", err.message);
+          console.log(err.message);
         }
-      } else {
-        console.log("⚠️ No device token found for user");
       }
+
+      complaint.isNotified = true;
     }
 
     await complaint.save();
 
     res.status(200).json({
-      message: "Complaint status updated",
+      message: "Updated successfully",
       complaint,
     });
   } catch (error) {
-    console.error("Error updating complaint:", error);
-    res.status(500).json({ message: error.message || "Server error" });
+    res.status(500).json({ message: error.message });
   }
 };
 
 // ==============================
-// STUDENT: Mark Notification Seen
+// MARK NOTIFIED
 // ==============================
 exports.markAsNotified = async (req, res) => {
   try {
@@ -176,18 +194,11 @@ exports.markAsNotified = async (req, res) => {
       return res.status(404).json({ message: "Complaint not found" });
     }
 
-    if (!complaint.student.equals(req.user._id)) {
-      return res.status(403).json({ message: "Not authorized" });
-    }
-
     complaint.isNotified = true;
     await complaint.save();
 
-    res.status(200).json({
-      message: "Notification marked as seen",
-    });
+    res.json({ message: "Marked as notified" });
   } catch (error) {
-    console.error("Error marking notification:", error);
     res.status(500).json({ message: error.message });
   }
 };

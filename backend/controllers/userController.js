@@ -1,10 +1,13 @@
 const User = require("../models/User");
+const Room = require("../models/Room");
+const Floor = require("../models/Floor");
 
-// Logged-in user profile
+// ================= MY PROFILE =================
 const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate("room", "roomNumber") 
+      .populate("room", "roomNumber")
+      .populate("floor", "floorNumber")
       .select("-password");
 
     res.status(200).json(user);
@@ -13,13 +16,13 @@ const getMyProfile = async (req, res) => {
   }
 };
 
-
-// Admin: get all users
+// ================= GET ALL USERS =================
 const getAllUsers = async (req, res) => {
   try {
     const users = await User.find()
-  .populate("room")
-  .select("-password");
+      .populate("room")
+      .populate("floor")
+      .select("-password");
 
     res.status(200).json(users);
   } catch (error) {
@@ -27,25 +30,22 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-// Admin: update user details including role and roomNumber
-const Room = require("../models/Room");
-
+// ================= UPDATE USER =================
 const updateUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, role, room } = req.body; // receive room ObjectId
+    const { name, email, role, room, floor } = req.body;
 
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Update basic fields
+    // ===== BASIC INFO =====
     if (name) user.name = name;
     if (email) user.email = email;
     if (role) user.role = role;
 
-    // ===== ROOM LOGIC =====
+    // ================= ROOM LOGIC =================
     if (room !== undefined) {
-      // If user already has a room, free that room first
       if (user.room) {
         const oldRoom = await Room.findById(user.room);
         if (oldRoom) {
@@ -55,7 +55,6 @@ const updateUser = async (req, res) => {
         }
       }
 
-      // If new room selected
       if (room) {
         const newRoom = await Room.findById(room);
         if (!newRoom)
@@ -70,8 +69,20 @@ const updateUser = async (req, res) => {
 
         user.room = room;
       } else {
-        // If admin removed room
         user.room = null;
+      }
+    }
+
+    // ================= FLOOR LOGIC (🔥 FIXED) =================
+    if (floor !== undefined) {
+      if (floor) {
+        const newFloor = await Floor.findById(floor);
+        if (!newFloor)
+          return res.status(404).json({ message: "Floor not found" });
+
+        user.floor = floor;
+      } else {
+        user.floor = null;
       }
     }
 
@@ -79,25 +90,24 @@ const updateUser = async (req, res) => {
 
     const updatedUser = await User.findById(id)
       .populate("room")
+      .populate("floor")
       .select("-password");
 
     res.status(200).json({
       message: "User updated successfully",
       user: updatedUser,
     });
-
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-
-// Admin: delete user
+// ================= DELETE USER =================
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByIdAndDelete(id);
 
+    const user = await User.findByIdAndDelete(id);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     res.status(200).json({ message: "User deleted successfully" });
@@ -106,18 +116,24 @@ const deleteUser = async (req, res) => {
   }
 };
 
-// Get user profile by ID (admin)
+// ================= GET USER BY ID =================
 const getUserByIdWithProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select("-password");
+    const user = await User.findById(req.params.id)
+      .populate("room")
+      .populate("floor")
+      .select("-password");
+
     if (!user) return res.status(404).json({ message: "User not found" });
+
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch user" });
   }
 };
 
-exports.saveToken = async (req, res) => {
+// ================= SAVE TOKEN =================
+const saveToken = async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
       req.user._id,
@@ -136,5 +152,6 @@ module.exports = {
   getAllUsers,
   updateUser,
   deleteUser,
-    getUserByIdWithProfile,
+  getUserByIdWithProfile,
+  saveToken,
 };

@@ -7,15 +7,31 @@ const complaintSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+
     warden: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      default: null,
     },
+
+    floor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Floor",
+      required: true,
+    },
+
+    room: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Room",
+      required: true,
+    },
+
     title: {
       type: String,
       required: true,
       trim: true,
     },
+
     description: {
       type: String,
       required: true,
@@ -23,21 +39,18 @@ const complaintSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // ✅ UPDATED STATUS (more realistic)
     status: {
       type: String,
       enum: ["pending", "in-progress", "resolved"],
       default: "pending",
     },
 
-    // ✅ NEW FIELD (Priority / Severity)
     priority: {
       type: String,
       enum: ["low", "medium", "high"],
       default: "medium",
     },
 
-    // ✅ OPTIONAL (for notification tracking)
     isNotified: {
       type: Boolean,
       default: false,
@@ -45,5 +58,8 @@ const complaintSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+//  AUTO DELETE AFTER 7 DAYS
+complaintSchema.index({ createdAt: 1 }, { expireAfterSeconds: 604800 });
 
 module.exports = mongoose.model("Complaint", complaintSchema);

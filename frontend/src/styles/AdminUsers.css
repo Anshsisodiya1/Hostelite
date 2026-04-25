@@ -1,4 +1,4 @@
-/* Page container */
+/* ===== PAGE CONTAINER ===== */
 .admin-users-container {
   padding: 24px;
   background: #f4f6f9;
@@ -6,45 +6,99 @@
   font-family: "Inter", "Segoe UI", Arial, sans-serif;
 }
 
-/* Card wrapper */
+/* ===== CARD ===== */
 .users-card {
   background: #ffffff;
   border-radius: 12px;
-  padding: 20px;
+  padding: 22px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
 }
 
-/* Table */
+/* ===== HEADER ===== */
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.users-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ===== TOGGLE BUTTONS ===== */
+.toggle-btns {
+  display: flex;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.toggle-btns button {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.toggle-btns button.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+/* ===== SEARCH ===== */
+.search-input {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: #2563eb;
+}
+
+/* ===== TABLE ===== */
 .users-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 16px;
   font-size: 14px;
 }
 
-/* Header */
+/* HEADER */
 .users-table th {
   background: #f9fafb;
   color: #374151;
   font-weight: 600;
   padding: 14px;
   border-bottom: 1px solid #e5e7eb;
+  text-align: left;
 }
 
-/* Cells */
+/* CELLS */
 .users-table td {
   padding: 14px;
   border-bottom: 1px solid #e5e7eb;
   color: #374151;
 }
 
-/* Row hover */
+/* ROW HOVER */
 .users-table tbody tr:hover {
   background: #f3f4f6;
 }
 
-/* First & last column radius */
+/* RADIUS */
 .users-table thead tr th:first-child {
   border-top-left-radius: 10px;
 }
@@ -53,39 +107,43 @@
   border-top-right-radius: 10px;
 }
 
-/* Username */
-.user-name {
+/* CLICKABLE NAME */
+.clickable {
   cursor: pointer;
   font-weight: 500;
   color: #2563eb;
 }
 
-.user-name:hover {
+.clickable:hover {
   text-decoration: underline;
 }
 
-/* Action buttons */
-.action-buttons {
-  display: flex;
-  gap: 10px;
-  align-items: center;
+/* ===== INPUTS ===== */
+.users-table input,
+.users-table select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+  width: 100%;
 }
 
-/* Buttons – base */
-button {
-  padding: 7px 14px;
+/* ===== ACTION BUTTONS ===== */
+.users-table button {
+  padding: 6px 12px;
   border-radius: 6px;
   border: none;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  margin-right: 6px;
   transition: all 0.2s ease;
 }
 
-/* Button variants */
+/* BUTTON TYPES */
 button.edit-btn {
   background: #22c55e;
-  color: white;
+  color: #fff;
 }
 
 button.edit-btn:hover {
@@ -94,7 +152,7 @@ button.edit-btn:hover {
 
 button.delete-btn {
   background: #ef4444;
-  color: white;
+  color: #fff;
 }
 
 button.delete-btn:hover {
@@ -103,7 +161,7 @@ button.delete-btn:hover {
 
 button.save-btn {
   background: #3b82f6;
-  color: white;
+  color: #fff;
 }
 
 button.save-btn:hover {
@@ -112,20 +170,20 @@ button.save-btn:hover {
 
 button.cancel-btn {
   background: #9ca3af;
-  color: white;
+  color: #fff;
 }
 
 button.cancel-btn:hover {
   background: #6b7280;
 }
 
-/* Processing text */
+/* PROCESSING TEXT */
 .processing-text {
   font-size: 13px;
   color: #6b7280;
 }
 
-/* Mobile view */
+/* ===== MOBILE ===== */
 @media (max-width: 768px) {
   .users-table thead {
     display: none;
@@ -150,9 +208,5 @@ button.cancel-btn:hover {
   .users-table td {
     border: none;
     padding: 8px 0;
-  }
-
-  .action-buttons {
-    margin-top: 10px;
   }
 }

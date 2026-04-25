@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import API from "../services/api";
 import { useNavigate } from "react-router-dom";
 import "../styles/complaint.css";
@@ -9,23 +9,42 @@ import {
   CheckCircle,
   AlertCircle,
   Loader2,
-  Type
+  Type,
 } from "lucide-react";
 
 export default function Complaint() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("medium"); // ✅ NEW
+  const [priority, setPriority] = useState("medium");
+
+  const [user, setUser] = useState(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showError, setShowError] = useState(false);
 
   const navigate = useNavigate();
 
-  // Form validation
+  // ================= FETCH USER (ROOM + FLOOR POPULATED) =================
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await API.get("/users/me");
+
+        setUser(res.data);
+      } catch (err) {
+        console.log("Failed to fetch user");
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  // ================= FORM VALIDATION =================
   const isFormValid =
     title.trim().length >= 3 && description.trim().length >= 10;
 
+  // ================= SUBMIT COMPLAINT =================
   const submitComplaint = async (e) => {
     e.preventDefault();
     if (!isFormValid) return;
@@ -37,12 +56,15 @@ export default function Complaint() {
       await API.post("/complaints", {
         title,
         description,
-        priority, // ✅ send to backend
+        priority,
+
+        // ✅ IMPORTANT: SEND IDs (NOT NAMES)
+        room: user?.room?._id,
+        floor: user?.room?.floor?._id,
       });
 
       setShowSuccess(true);
 
-      // Reset form
       setTitle("");
       setDescription("");
       setPriority("medium");
@@ -53,6 +75,7 @@ export default function Complaint() {
     } catch (error) {
       console.error(error.response?.data);
       setShowError(true);
+
       setTimeout(() => setShowError(false), 3000);
     } finally {
       setIsSubmitting(false);
@@ -63,84 +86,91 @@ export default function Complaint() {
     <div className="complaint-container">
       <div className="complaint-card">
 
-        {/* Header */}
+        {/* HEADER */}
         <div className="complaint-header">
           <div className="header-icon">
             <AlertTriangle size={32} />
           </div>
+
           <div className="header-text">
             <h2>Submit Complaint</h2>
             <p className="header-subtitle">
               Describe your issue clearly so we can resolve it quickly
             </p>
+
+            {/* ================= ROOM & FLOOR DISPLAY ================= */}
+            <div style={{ marginTop: "10px", fontSize: "14px", color: "#555" }}>
+              <p>
+                📍 Room:{" "}
+                <b>{user?.room?.roomNumber || "Not Assigned"}</b>
+              </p>
+
+              <p>
+                🏢 Floor:{" "}
+                <b>{user?.room?.floor?.floorNumber || "Not Assigned"}</b>
+              </p>
+            </div>
           </div>
         </div>
 
-        {/* Feedback Messages */}
+        {/* SUCCESS */}
         {showSuccess && (
           <div className="feedback-message success">
             <CheckCircle size={20} />
-            <span>Complaint submitted successfully! Redirecting...</span>
+            <span>Complaint submitted successfully!</span>
           </div>
         )}
 
+        {/* ERROR */}
         {showError && (
           <div className="feedback-message error">
             <AlertCircle size={20} />
-            <span>Failed to submit complaint. Please try again.</span>
+            <span>Failed to submit complaint</span>
           </div>
         )}
 
-        {/* Complaint Form */}
+        {/* FORM */}
         <form onSubmit={submitComplaint}>
 
-          {/* Title */}
+          {/* TITLE */}
           <div className="form-group">
-            <label className="form-label" htmlFor="title">
+            <label className="form-label">
               <Type size={16} />
               Complaint Title
             </label>
+
             <input
               type="text"
-              id="title"
-              placeholder="Eg: Water leakage in room"
+              placeholder="Eg: Water leakage"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="form-input"
-              maxLength={100}
               required
             />
-            <div className="input-hint">
-              {title.length}/100 characters
-            </div>
           </div>
 
-          {/* Description */}
+          {/* DESCRIPTION */}
           <div className="form-group">
-            <label className="form-label" htmlFor="description">
+            <label className="form-label">
               <FileText size={16} />
-              Complaint Description
+              Description
             </label>
+
             <textarea
-              id="description"
-              placeholder="Write your complaint here"
+              placeholder="Write complaint..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               className="form-textarea"
-              rows={6}
-              maxLength={500}
+              rows={5}
               required
             />
-            <div className="input-hint">
-              {description.length}/500 characters
-            </div>
           </div>
 
-          {/* ✅ Priority Dropdown */}
+          {/* PRIORITY */}
           <div className="form-group">
             <label className="form-label">
               <AlertTriangle size={16} />
-              Priority Level
+              Priority
             </label>
 
             <select
@@ -148,43 +178,33 @@ export default function Complaint() {
               onChange={(e) => setPriority(e.target.value)}
               className="form-select"
             >
-              <option value="low">Low (Minor issue)</option>
-              <option value="medium">Medium (Normal issue)</option>
-              <option value="high">High (Urgent issue)</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
             </select>
           </div>
 
-          {/* Submit Button */}
+          {/* SUBMIT */}
           <div className="submit-section">
             <button
               type="submit"
-              className={`submit-btn ${!isFormValid ? "disabled" : ""}`}
               disabled={!isFormValid || isSubmitting}
+              className={`submit-btn ${!isFormValid ? "disabled" : ""}`}
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 size={20} className="spinner" />
+                  <Loader2 size={18} className="spinner" />
                   Submitting...
                 </>
               ) : (
                 <>
-                  <Send size={20} />
+                  <Send size={18} />
                   Submit Complaint
                 </>
               )}
             </button>
           </div>
         </form>
-
-        {/* Help Section */}
-        <div className="help-section">
-          <p className="help-text">
-            <strong>Need help?</strong> Contact the hostel office at{" "}
-            <a href="mailto:hostel@college.edu" className="help-link">
-              hostel@college.edu
-            </a>
-          </p>
-        </div>
 
       </div>
     </div>

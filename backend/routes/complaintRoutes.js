@@ -3,7 +3,8 @@ const {
   submitComplaint,
   getComplaints,
   updateComplaintStatus,
-  markAsNotified, // ✅ NEW
+  markAsNotified,
+  rejectComplaint 
 } = require("../controllers/complaintController");
 
 const { authMiddleware } = require("../middleware/authMiddleware");
@@ -29,5 +30,7 @@ router.put("/:id", authMiddleware, updateComplaintStatus);
 // STUDENT: Mark Notification Seen
 // ==============================
 router.put("/:id/notify", authMiddleware, markAsNotified); // ✅ NEW
+
+router.put("/reject/:id", rejectComplaint);
 
 module.exports = router;

@@ -1,232 +1,413 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import { useAuth } from "../contexts/AuthContext";
 import "../styles/Login.css";
 
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ArrowRight,
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [require2FA, setRequire2FA] = useState(false);
+  const [userId, setUserId] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
-  const [isFocused, setIsFocused] = useState("");
 
   const navigate = useNavigate();
   const { login } = useAuth();
-  const emailInputRef = useRef(null);
+
+  const emailRef = useRef(null);
+  const otpRefs = useRef([]);
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem("rememberedEmail");
-    if (savedEmail) {
-      setEmail(savedEmail);
+    const saved = localStorage.getItem("rememberedEmail");
+
+    if (saved) {
+      setEmail(saved);
       setRememberMe(true);
     }
 
-    if (emailInputRef.current) {
-      emailInputRef.current.focus();
-    }
+    emailRef.current?.focus();
   }, []);
 
-  const validateEmail = (email) => {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  const validateEmail = (e) =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+  /* ================= OTP ================= */
+
+  const handleOtpChange = (index, value) => {
+    if (!/^\d*$/.test(value)) return;
+
+    const next = [...otp];
+    next[index] = value.slice(-1);
+
+    setOtp(next);
+    setError("");
+
+    if (value && index < 5) {
+      otpRefs.current[index + 1]?.focus();
+    }
   };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleOtpPaste = (e) => {
+    const pasted = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
+
+    if (pasted.length === 6) {
+      setOtp(pasted.split(""));
+      otpRefs.current[5]?.focus();
+    }
+
+    e.preventDefault();
+  };
+
+  /* ================= LOGIN ================= */
 
   const loginHandler = async (e) => {
     e.preventDefault();
+
     setError("");
 
     if (!email || !password) {
-      setError("Please fill in all fields");
+      setError("Please fill in all fields.");
       return;
     }
 
     if (!validateEmail(email)) {
-      setError("Please enter a valid email address");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError("Enter a valid email address.");
       return;
     }
 
     setLoading(true);
 
     try {
-      const res = await API.post("/auth/login", { email, password });
+      const res = await API.post("/auth/login", {
+        email,
+        password,
+      });
+
+      if (res.data.require2FA) {
+        setRequire2FA(true);
+        setUserId(res.data.userId);
+        return;
+      }
 
       if (res.data.token && res.data.user) {
-        if (rememberMe) {
-          localStorage.setItem("rememberedEmail", email);
-        } else {
-          localStorage.removeItem("rememberedEmail");
-        }
+        rememberMe
+          ? localStorage.setItem("rememberedEmail", email)
+          : localStorage.removeItem("rememberedEmail");
 
-        // Direct login and navigate
         login(res.data.token, res.data.user);
-        navigate("/dashboard");
-      } else {
-        setError("Invalid response from server");
-      }
-    } catch (error) {
-      console.error("Login error:", error);
 
-      if (error.response?.status === 401) {
-        setError("Invalid email or password");
-      } else if (error.response?.status === 429) {
-        setError("Too many login attempts. Please try again later");
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message);
-      } else if (error.code === "NETWORK_ERROR") {
-        setError("Network error. Please check your connection");
-      } else {
-        setError("Login failed. Please try again.");
+        navigate("/dashboard");
       }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Login failed. Please try again."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (field, value) => {
-    if (error) setError("");
+  /* ================= VERIFY 2FA ================= */
 
-    if (field === "email") {
-      setEmail(value);
-    } else if (field === "password") {
-      setPassword(value);
+  const verify2FAHandler = async () => {
+    const otpString = otp.join("");
+
+    if (otpString.length < 6) {
+      setError("Enter all 6 digits.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await API.post(
+        "/auth/verify-2fa-login",
+        {
+          userId,
+          token: otpString,
+        }
+      );
+
+      login(res.data.token, res.data.user);
+
+      navigate("/dashboard");
+    } catch {
+      setError("Invalid code. Please try again.");
+
+      setOtp(["", "", "", "", "", ""]);
+
+      otpRefs.current[0]?.focus();
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleInputFocus = (field) => {
-    setIsFocused(field);
-  };
+  /* ================= 2FA SCREEN ================= */
 
-  const handleInputBlur = () => {
-    setIsFocused("");
-  };
+  if (require2FA) {
+    return (
+      <div className="login-page">
 
-  return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <div className="auth-header">
-          <div className="auth-logo">
-            <div className="logo-icon">
-              <span className="logo-text">🏠</span>
-              <div className="logo-glow"></div>
+        <div className="login-container">
+          <h1 className="login-title">
+            Verify Identity
+          </h1>
+
+          <p className="login-subtitle">
+            Enter the 6-digit code from your authenticator app
+          </p>
+
+          {error && (
+            <div className="error-box">
+              <AlertCircle size={15} />
+              <span>{error}</span>
             </div>
-            <h2 className="auth-title">Welcome Back</h2>
-            <p className="auth-subtitle">
-              Sign in to your Hostelite account
-            </p>
-          </div>
-        </div>
+          )}
 
-        {error && (
-          <div className="error-message">
-            <span className="error-icon">⚠️</span>
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={loginHandler} className="auth-form">
-          <div className="input-group">
-            <div
-              className={`input-wrapper ${
-                isFocused === "email" ? "focused" : ""
-              }`}
-            >
+          <div
+            className="otp-wrapper"
+            onPaste={handleOtpPaste}
+          >
+            {otp.map((digit, i) => (
               <input
-                ref={emailInputRef}
-                type="email"
-                placeholder="Enter your E-mail"
-                value={email}
+                key={i}
+                ref={(el) => (otpRefs.current[i] = el)}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
                 onChange={(e) =>
-                  handleInputChange("email", e.target.value)
+                  handleOtpChange(i, e.target.value)
                 }
-                onFocus={() => handleInputFocus("email")}
-                onBlur={handleInputBlur}
-                required
-                className="auth-input"
-              />
-              <div className="input-border"></div>
-            </div>
-          </div>
-
-          <div className="input-group">
-            <div
-              className={`input-wrapper ${
-                isFocused === "password" ? "focused" : ""
-              }`}
-            >
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="Password"
-                value={password}
-                onChange={(e) =>
-                  handleInputChange("password", e.target.value)
+                onKeyDown={(e) =>
+                  handleOtpKeyDown(i, e)
                 }
-                onFocus={() => handleInputFocus("password")}
-                onBlur={handleInputBlur}
-                required
-                className="auth-input"
+                className="otp-input"
+                autoFocus={i === 0}
               />
-              <button
-                type="button"
-                className="password-toggle"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "👁️" : "👁️‍🗨️"}
-              </button>
-              <div className="input-border"></div>
-            </div>
-          </div>
-
-          <div className="form-options">
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) =>
-                  setRememberMe(e.target.checked)
-                }
-              />
-              Remember me
-            </label>
+            ))}
           </div>
 
           <button
-            type="submit"
-            disabled={loading}
-            className="auth-button"
+            className="login-btn"
+            onClick={verify2FAHandler}
+            disabled={
+              loading || otp.join("").length < 6
+            }
           >
             {loading ? (
               <>
-                <span className="spinner"></span>
+                <Loader2
+                  size={16}
+                  className="spin"
+                />
+                Verifying...
+              </>
+            ) : (
+              <>
+                Confirm & Sign In
+              </>
+            )}
+          </button>
+
+        </div>
+      </div>
+    );
+  }
+
+  /* ================= LOGIN SCREEN ================= */
+
+  return (
+
+
+      <div className="login-container">
+
+
+
+        {/* HEAD */}
+
+        <h1 className="login-title">
+          Welcome back
+        </h1>
+
+        <p className="login-subtitle">
+         Continue to your personalized hostel dashboard.
+        </p>
+
+        {/* ERROR */}
+
+        {error && (
+          <div className="error-box">
+            <AlertCircle size={15} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* FORM */}
+
+        <form
+          onSubmit={loginHandler}
+          className="login-form"
+          noValidate
+        >
+
+          {/* EMAIL */}
+
+          <div className="form-group">
+
+            <label>Email</label>
+
+            <div className="input-box">
+
+              <Mail
+                size={18}
+                className="left-icon"
+              />
+
+              <input
+                ref={emailRef}
+                type="email"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
+                autoComplete="email"
+              />
+            </div>
+          </div>
+
+          {/* PASSWORD */}
+
+          <div className="form-group">
+
+            <div className="form-row">
+
+            </div>
+              <label>Password</label>
+
+            <div className="input-box">
+
+              <Lock
+                size={18}
+                className="left-icon-l"
+              />
+
+              <input
+                type={
+                  showPassword
+                    ? "text"
+                    : "password"
+                }
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                autoComplete="current-password"
+              />
+
+              <button
+                type="button"
+                className="right-icon"
+                onClick={() =>
+                  setShowPassword(!showPassword)
+                }
+              >
+                {showPassword ? (
+                  <EyeOff size={18} />
+                ) : (
+                  <Eye size={18} />
+                )}
+              </button>
+              <span
+                className="forgot-password"
+                onClick={() =>
+                  navigate("/forgot-password")
+                }
+              >
+                Forgot password?
+              </span>
+
+            </div>
+          </div>
+
+          {/* REMEMBER */}
+
+          <label className="remember">
+
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) =>
+                setRememberMe(e.target.checked)
+              }
+            />
+
+            Keep me signed in
+
+          </label>
+
+          {/* BUTTON */}
+
+          <button
+            type="submit"
+            className="login-btn"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <Loader2
+                  size={18}
+                  className="spin"
+                />
                 Signing in...
               </>
             ) : (
               <>
-                <span className="button-text">Sign In</span>
-                <span className="button-arrow">→</span>
+                Sign In
+                <ArrowRight size={18} />
               </>
             )}
           </button>
+
         </form>
 
-        <p
-          className="forgot-password"
-          onClick={() => navigate("/forgot-password")}
-        >
-          Forgot Password?
-        </p>
 
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
+
+
+
       </div>
-    </div>
+ 
   );
-} 
+}
+

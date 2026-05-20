@@ -1,6 +1,7 @@
 const admin = require("../firebaseAdmin");
 const Complaint = require("../models/Complaint");
 const User = require("../models/User");
+const nodemailer = require("nodemailer");
 
 // ==============================
 // STUDENT: SUBMIT COMPLAINT
@@ -73,7 +74,7 @@ exports.getComplaints = async (req, res) => {
     const user = req.user;
     let complaints;
 
-    // 🔥 LAST 7 DAYS FILTER
+    //  LAST 7 DAYS FILTER
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -200,5 +201,54 @@ exports.markAsNotified = async (req, res) => {
     res.json({ message: "Marked as notified" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.rejectComplaint = async (req, res) => {
+  try {
+    const complaintId = req.params.id;
+
+    const complaint = await Complaint.findById(complaintId)
+      .populate("student");
+
+    if (!complaint) {
+      return res.status(404).json({ message: "Complaint not found" });
+    }
+
+    complaint.status = "rejected";
+    await complaint.save();
+
+    // 📧 SEND EMAIL TO STUDENT
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    await transporter.sendMail({
+      to: complaint.student.email,
+      subject: "Hostel Complaint Update",
+      html: `
+        <h3>Complaint Rejected</h3>
+        <p>Dear ${complaint.student.name},</p>
+
+        <p>Your complaint titled <b>${complaint.title}</b> has been reviewed by the warden and marked as <b>REJECTED</b>.</p>
+
+        <p>If you think this is a mistake, please contact the hostel office.</p>
+
+        <br/>
+        <p>Regards,<br/>Hostelite Management</p>
+      `,
+    });
+
+    res.json({
+      message: "Complaint rejected and email sent",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
   }
 };

@@ -13,7 +13,7 @@ import AdminUsers from "./pages/AdminUsers";
 import AdminPayments from "./pages/AdminPayments";
 import StudentPayment from "./pages/StudentPayment";
 import WardenMeals from "./pages/WardenMeals";
-import StudentMeals from "./pages/StudentMeals";
+import TodayMeal from "./components/TodayMeal";
 import UnderConstruction from "./components/UnderConstruction";
 import SystemSettings from "./pages/SystemSettings";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -23,21 +23,23 @@ import AdvancePayment from "./pages/AdvancePayment";
 import RazorpayPayment from "./pages/RazorpayPayment";
 import UpiPayment from "./pages/UpiPayment";
 import DebitCardPayment from "./pages/DebitCardPayment";
-import AddHostel from "./pages/AddHostel";
+import ReportCard from "./pages/ReportCard";
+// import AddHostel from "./pages/AddHostel";
 
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
   return (
     <BrowserRouter>
-      {/* ✅ MOVE TOASTER HERE */}
+      {/* Toast Notifications */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <Routes>
         {/* ================= PUBLIC ROUTES ================= */}
         <Route path="/" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* ================= PROTECTED ROUTES ================= */}
+        {/* ================= REGISTER ROUTE (ADMIN ONLY) ================= */}
         <Route
           path="/register"
           element={
@@ -47,6 +49,7 @@ export default function App() {
           }
         />
 
+        {/* ================= PROTECTED LAYOUT ROUTES ================= */}
         <Route
           element={
             <ProtectedRoute>
@@ -54,9 +57,10 @@ export default function App() {
             </ProtectedRoute>
           }
         >
+          {/* DASHBOARD */}
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* STUDENT */}
+          {/* ================= STUDENT ROUTES ================= */}
           <Route
             path="/complaints"
             element={
@@ -120,7 +124,16 @@ export default function App() {
             }
           />
 
-          {/* WARDEN */}
+          <Route
+            path="/student/profile"
+            element={
+              <ProtectedRoute role="student">
+                <StudentProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= WARDEN ROUTES ================= */}
           <Route
             path="/warden/complaints"
             element={
@@ -130,7 +143,16 @@ export default function App() {
             }
           />
 
-          {/* ADMIN */}
+          <Route
+            path="/warden/meals"
+            element={
+              <ProtectedRoute role="warden">
+                <WardenMeals />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= ADMIN ROUTES ================= */}
           <Route
             path="/admin/users"
             element={
@@ -148,38 +170,57 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/admin/report"
+            element={
+              <ProtectedRoute role="admin">
+                <ReportCard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/student/:id"
+            element={
+              <ProtectedRoute role="admin">
+                <AdminStudentProfile />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/under-construction"
+            element={
+              <ProtectedRoute role="admin">
+                <UnderConstruction />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/system-settings"
+            element={
+              <ProtectedRoute role="admin">
+                <SystemSettings />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ================= COMMON ROUTES ================= */}
+          <Route path="/today/meals" element={<TodayMeal />} />
+
+          {/* <Route
+            path="/admin/add-hostel"
+            element={
+              <ProtectedRoute role="admin">
+                <AddHostel />
+              </ProtectedRoute>
+            }
+          /> */}
         </Route>
 
-        <Route path="/warden/meals" element={<WardenMeals />} />
-        <Route path="/student/meals" element={<StudentMeals />} />
-        <Route
-          path="/admin/under-construction"
-          element={<UnderConstruction />}
-        />
-        <Route path="/admin/system-settings" element={<SystemSettings />} />
-
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/student/profile" element={<StudentProfile />} />
-
-        <Route
-          path="/admin/student/:id"
-          element={
-            <ProtectedRoute role="admin">
-              <AdminStudentProfile />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/add-hostel"
-          element={
-            <ProtectedRoute role="admin">
-              <AddHostel />
-            </ProtectedRoute>
-          }
-        />
-
-        {/* ================= FALLBACK ================= */}
+        {/* ================= FALLBACK ROUTE ================= */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

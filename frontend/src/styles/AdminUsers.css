@@ -1,116 +1,182 @@
-/* ===== PAGE CONTAINER ===== */
+
+/* =========================
+   GLOBAL PAGE WRAPPER
+========================= */
+
 .admin-users-container {
-  padding: 24px;
-  background: #f4f6f9;
+  padding: 26px;
+  background: #f5f7fb;
   min-height: 100vh;
-  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
 }
 
-/* ===== CARD ===== */
+/* =========================
+   MAIN CARD
+========================= */
+
 .users-card {
   background: #ffffff;
-  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
   padding: 22px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
 }
 
-/* ===== HEADER ===== */
+/* =========================
+   HEADER SECTION (SAAS STYLE)
+========================= */
+
 .users-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
   margin-bottom: 16px;
 }
 
 .users-header h2 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
 }
 
-/* ===== TOGGLE BUTTONS ===== */
+/* right actions group */
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* =========================
+   ROLE TOGGLE (PILLS)
+========================= */
+
 .toggle-btns {
   display: flex;
-  gap: 8px;
   background: #f1f5f9;
   padding: 4px;
-  border-radius: 8px;
+  border-radius: 999px;
+  gap: 4px;
 }
 
 .toggle-btns button {
-  padding: 6px 14px;
-  border-radius: 6px;
   border: none;
   background: transparent;
-  cursor: pointer;
+  padding: 7px 14px;
+  border-radius: 999px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: #475569;
+  cursor: pointer;
+  transition: 0.2s ease;
 }
 
 .toggle-btns button.active {
   background: #2563eb;
   color: #fff;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
 }
 
-/* ===== SEARCH ===== */
+/* =========================
+   ADD BUTTON (PRIMARY CTA)
+========================= */
+
+.add-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #fff;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.18);
+}
+
+.add-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* =========================
+   TOOLBAR + SEARCH
+========================= */
+
+.toolbar {
+  /* display: flex;
+  justify-content: flex-end; */
+  margin-bottom: 14px;
+}
+
 .search-input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  font-size: 14px;
+  width: 240px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 13px;
+  transition: 0.2s ease;
   outline: none;
 }
 
 .search-input:focus {
+  width: 280px;
+  background: #fff;
   border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* ===== TABLE ===== */
+/* =========================
+   TABLE (MODERN DATA GRID)
+========================= */
+
 .users-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 14px;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* HEADER */
+/* header */
 .users-table th {
-  background: #f9fafb;
-  color: #374151;
-  font-weight: 600;
-  padding: 14px;
-  border-bottom: 1px solid #e5e7eb;
   text-align: left;
+  padding: 14px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #64748b;
+  background: #f8fafc;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-/* CELLS */
+/* rows */
 .users-table td {
   padding: 14px;
-  border-bottom: 1px solid #e5e7eb;
-  color: #374151;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+  font-size: 14px;
+  vertical-align: middle;
 }
 
-/* ROW HOVER */
+/* hover effect (SaaS lift feel) */
+.users-table tbody tr {
+  transition: 0.2s ease;
+}
+
 .users-table tbody tr:hover {
-  background: #f3f4f6;
+  background: #f8fafc;
+  transform: scale(1.002);
 }
 
-/* RADIUS */
-.users-table thead tr th:first-child {
-  border-top-left-radius: 10px;
-}
+/* =========================
+   CLICKABLE NAME
+========================= */
 
-.users-table thead tr th:last-child {
-  border-top-right-radius: 10px;
-}
-
-/* CLICKABLE NAME */
 .clickable {
   cursor: pointer;
-  font-weight: 500;
+  font-weight: 600;
   color: #2563eb;
 }
 
@@ -118,73 +184,116 @@
   text-decoration: underline;
 }
 
-/* ===== INPUTS ===== */
+/* =========================
+   INPUTS INSIDE TABLE
+========================= */
+
 .users-table input,
 .users-table select {
-  padding: 6px 10px;
-  border-radius: 6px;
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 8px;
   border: 1px solid #d1d5db;
   font-size: 13px;
-  width: 100%;
+  outline: none;
 }
 
-/* ===== ACTION BUTTONS ===== */
-.users-table button {
-  padding: 6px 12px;
-  border-radius: 6px;
+.users-table input:focus,
+.users-table select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* base */
+.action-buttons button {
+  padding: 6px 10px;
+  border-radius: 8px;
   border: none;
-  font-size: 13px;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  margin-right: 6px;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
 
-/* BUTTON TYPES */
-button.edit-btn {
-  background: #22c55e;
-  color: #fff;
+/* Edit */
+.action-buttons button:nth-child(1) {
+  background: #f59e0b;
+  color: white;
 }
 
-button.edit-btn:hover {
-  background: #16a34a;
+.action-buttons button:nth-child(1):hover {
+  background: #d97706;
 }
 
-button.delete-btn {
+/* Delete */
+.action-buttons button:nth-child(2) {
   background: #ef4444;
-  color: #fff;
+  color: white;
 }
 
-button.delete-btn:hover {
+.action-buttons button:nth-child(2):hover {
   background: #dc2626;
 }
 
-button.save-btn {
-  background: #3b82f6;
-  color: #fff;
+/* Save override (if needed visually) */
+.action-buttons button:has(+ button) {
+  background: #22c55e;
+  color: white;
 }
 
-button.save-btn:hover {
-  background: #2563eb;
-}
-
-button.cancel-btn {
-  background: #9ca3af;
-  color: #fff;
-}
-
-button.cancel-btn:hover {
-  background: #6b7280;
-}
-
-/* PROCESSING TEXT */
+/* processing text */
 .processing-text {
-  font-size: 13px;
-  color: #6b7280;
+  font-size: 12px;
+  color: #64748b;
 }
 
-/* ===== MOBILE ===== */
+/* =========================
+   LOADING STATE
+========================= */
+
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+
+/* =========================
+   MOBILE RESPONSIVE (CARD VIEW)
+========================= */
+
 @media (max-width: 768px) {
+  .users-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .right-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toolbar {
+    justify-content: stretch;
+  }
+
+  .search-input {
+    width: 100%;
+  }
+
+  .search-input:focus {
+    width: 100%;
+  }
+
   .users-table thead {
     display: none;
   }
@@ -198,15 +307,21 @@ button.cancel-btn:hover {
   }
 
   .users-table tr {
-    background: #ffffff;
     margin-bottom: 14px;
-    border-radius: 10px;
-    padding: 12px;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 14px;
   }
 
   .users-table td {
+    display: flex;
+    justify-content: space-between;
     border: none;
     padding: 8px 0;
+  }
+
+  .action-buttons {
+    justify-content: space-between;
   }
 }

@@ -1,132 +1,276 @@
 .warden-container {
-    max-width: 1000px;
-    margin: 20px auto;
-    padding: 20px;
-    background: #f5f6fa;
-    border-radius: 10px;
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 24px;
+    background: #f8fafc;
+    border-radius: 16px;
     box-sizing: border-box;
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
 }
 
+/* Title */
 .warden-container h2 {
     text-align: center;
-    margin-bottom: 20px;
-    color: #1e40af;
+    font-size: 26px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 24px;
+    letter-spacing: 0.3px;
 }
 
-.no-complaints {
-    text-align: center;
-    font-style: italic;
-    color: #555;
+/* =========================
+   TABS (SAAS STYLE)
+========================= */
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
 }
 
-/* Complaints Grid */
+.tabs button {
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    cursor: pointer;
+    font-weight: 600;
+    color: #475569;
+    transition: all 0.25s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+.tabs button:hover {
+    transform: translateY(-1px);
+}
+
+.tabs button.active {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+    box-shadow: 0 6px 18px rgba(37,99,235,0.25);
+}
+
+/* =========================
+   GRID
+========================= */
+
 .complaints-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
 }
 
-/* Complaint Card */
+/* =========================
+   COMPLAINT CARD (MODERN SaaS)
+========================= */
+
 .complaint-card {
-    width: 100%; /* ✅ FIXED (removed 65vh bug) */
-    background: #fff;
-    padding: 20px;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 18px;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    transition: 0.3s ease;
+    transition: all 0.25s ease;
+    box-shadow: 0 6px 18px rgba(15,23,42,0.05);
+    position: relative;
 }
 
-/* Hover effect (optional but nice) */
 .complaint-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 28px rgba(15,23,42,0.1);
 }
 
-/* ============================= */
-/* 🔴 HIGH PRIORITY */
-/* ============================= */
+/* subtle top glow indicator */
+.complaint-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 14px 14px 0 0;
+}
+
+/* Priority colors */
+.complaint-card.high::before {
+    background: #ef4444;
+}
+
+.complaint-card.medium::before {
+    background: #f59e0b;
+}
+
+.complaint-card.low::before {
+    background: #22c55e;
+}
+
+/* Priority backgrounds soft */
 .complaint-card.high {
-    border-left: 6px solid #ff4d4f;
-    background: #fff5f5;
-    box-shadow: 0 0 10px rgba(255, 77, 79, 0.2);
+    background: linear-gradient(to bottom, #fff5f5, #ffffff);
 }
 
-/* ============================= */
-/* 🟡 MEDIUM PRIORITY */
-/* ============================= */
 .complaint-card.medium {
-    border-left: 6px solid #faad14;
-    background: #fffbe6;
+    background: linear-gradient(to bottom, #fffbeb, #ffffff);
 }
 
-/* ============================= */
-/* 🟢 LOW PRIORITY */
-/* ============================= */
 .complaint-card.low {
-    border-left: 6px solid #52c41a;
-    background: #f6ffed;
+    background: linear-gradient(to bottom, #f0fdf4, #ffffff);
 }
 
-/* Priority Text */
+/* =========================
+   TEXT STYLE
+========================= */
+
+.complaint-card p {
+    margin: 0;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.4;
+}
+
+.complaint-card b {
+    color: #0f172a;
+}
+
+/* =========================
+   BADGES (SaaS style)
+========================= */
+
+.priority {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-block;
+}
+
 .priority.high {
-    color: #ff4d4f;
-    font-weight: bold;
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 .priority.medium {
-    color: #faad14;
-    font-weight: bold;
+    background: #fef3c7;
+    color: #d97706;
 }
 
 .priority.low {
-    color: #52c41a;
-    font-weight: bold;
+    background: #dcfce7;
+    color: #16a34a;
 }
 
-/* Status badge (optional improvement) */
+/* status */
+.status {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+}
+
 .status.pending {
-    color: #d97706;
-    font-weight: bold;
+    background: #fef3c7;
+    color: #b45309;
 }
 
-/* Button */
-.resolve-btn {
-    width: fit-content;
-    padding: 10px 15px;
-    border-radius: 6px;
-    border: none;
-    background-color: #16a34a;
-    color: #fff;
-    cursor: pointer;
-    font-weight: bold;
-    transition: background 0.3s ease;
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
     margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+/* Resolve button */
+.resolve-btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #16a34a;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .resolve-btn:hover {
-    background-color: #15803d;
+    background: #15803d;
+    transform: translateY(-1px);
 }
 
-/* Responsive */
-@media (max-width: 600px) {
+/* Reject button */
+.reject-btn {
+    padding: 9px 14px;
+    border-radius: 10px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.reject-btn:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+}
+
+/* disabled */
+button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.no-complaints {
+    text-align: center;
+    color: #64748b;
+    font-style: normal;
+    padding: 40px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+}
+
+/* =========================
+   MOBILE RESPONSIVE
+========================= */
+
+@media (max-width: 768px) {
     .warden-container {
-        padding: 15px;
+        padding: 16px;
     }
 
     .complaints-grid {
         grid-template-columns: 1fr;
     }
 
-    .complaint-card {
-        padding: 15px;
-        width: 100%;
+    .tabs {
+        gap: 8px;
     }
 
-    .resolve-btn {
-        width: 100%;
+    .tabs button {
+        flex: 1;
         text-align: center;
+    }
+
+    .action-buttons {
+        flex-direction: column;
+    }
+
+    .resolve-btn,
+    .reject-btn {
+        width: 100%;
     }
 }

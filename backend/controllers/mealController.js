@@ -20,22 +20,22 @@ exports.saveTodayMeal = async (req, res) => {
       { new: true, upsert: true }
     );
 
-    // 🔥 GET STUDENT EMAILS
+    //  GET STUDENT EMAILS
     const students = await User.find({ role: "student" }).select("email");
 
     const emails = students
       .map((s) => s.email)
       .filter(Boolean);
 
-    console.log("📩 Emails found:", emails); // DEBUG
+    console.log(" Emails found:", emails); // DEBUG
 
-    // 🔥 SEND MAIL
+    // SEND MAIL
     if (emails.length > 0) {
       try {
         await sendMealMail(emails, meal);
-        console.log("✅ Mail sent successfully");
+        console.log(" Mail sent successfully");
       } catch (mailErr) {
-        console.error("❌ Mail error:", mailErr);
+        console.error(" Mail error:", mailErr);
       }
     }
 
@@ -45,7 +45,7 @@ exports.saveTodayMeal = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("❌ Controller error:", error);
+    console.error(" Controller error:", error);
     res.status(500).json({ message: "Failed to save meal" });
   }
 };

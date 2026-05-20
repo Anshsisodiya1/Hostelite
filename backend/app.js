@@ -31,6 +31,7 @@ app.use("/api/system-settings", require("./routes/systemSettings.routes"));
 app.use("/api/meals", require("./routes/mealRoutes"));
 app.use("/api/profile", require("./routes/userProfileRoutes"));
 app.use("/api/floors", require("./routes/floorRoutes"));
+app.use("/api/reports", require("./routes/reports"));
 // Test route
 app.get("/", (req, res) => res.send("Hostelite Backend Running"));
 

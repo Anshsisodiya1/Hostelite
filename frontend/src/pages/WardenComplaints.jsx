@@ -10,7 +10,7 @@ export default function WardenComplaints() {
   const [loading, setLoading] = useState(true);
   const [processingId, setProcessingId] = useState(null);
 
-  const [tab, setTab] = useState("pending"); // 🔥 NEW
+  const [tab, setTab] = useState("pending");
 
   useEffect(() => {
     fetchComplaints();
@@ -32,6 +32,7 @@ export default function WardenComplaints() {
     }
   };
 
+  // ================= RESOLVE =================
   const markAsResolved = async (id) => {
     try {
       setProcessingId(id);
@@ -54,15 +55,37 @@ export default function WardenComplaints() {
     }
   };
 
+  // ================= REJECT (NEW FEATURE) =================
+  const rejectComplaint = async (id) => {
+    try {
+      setProcessingId(id);
+
+      await API.put(`/complaints/reject/${id}`);
+
+      setComplaints((prev) =>
+        prev.map((c) =>
+          c._id === id ? { ...c, status: "rejected" } : c
+        )
+      );
+
+      setProcessingId(null);
+    } catch (error) {
+      console.error(error);
+      alert("Failed to reject complaint");
+      setProcessingId(null);
+    }
+  };
+
   if (loading) return <h3>Loading complaints...</h3>;
 
-  // ================= FILTER LOGIC =================
+  // ================= FILTERS =================
   const pendingComplaints = complaints.filter(
     (c) => c.status === "pending"
   );
 
   const historyComplaints = complaints.filter(
-    (c) => c.status === "resolved"
+    (c) =>
+      c.status === "resolved" || c.status === "rejected"
   );
 
   const activeList =
@@ -85,7 +108,7 @@ export default function WardenComplaints() {
           className={tab === "history" ? "active" : ""}
           onClick={() => setTab("history")}
         >
-          Complaint History ({historyComplaints.length})
+          History ({historyComplaints.length})
         </button>
       </div>
 
@@ -134,17 +157,31 @@ export default function WardenComplaints() {
                   <b>Status:</b> {c.status}
                 </p>
 
-                {/* ================= BUTTON ONLY FOR PENDING ================= */}
+                {/* ================= ACTION BUTTONS ================= */}
                 {tab === "pending" && (
-                  <button
-                    className="resolve-btn"
-                    disabled={processingId === c._id}
-                    onClick={() => markAsResolved(c._id)}
-                  >
-                    {processingId === c._id
-                      ? "Processing..."
-                      : "Mark as Resolved"}
-                  </button>
+                  <div className="action-buttons">
+
+                    <button
+                      className="resolve-btn"
+                      disabled={processingId === c._id}
+                      onClick={() => markAsResolved(c._id)}
+                    >
+                      {processingId === c._id
+                        ? "Processing..."
+                        : "Resolve"}
+                    </button>
+
+                    <button
+                      className="reject-btn"
+                      disabled={processingId === c._id}
+                      onClick={() => rejectComplaint(c._id)}
+                    >
+                      {processingId === c._id
+                        ? "Processing..."
+                        : "Reject"}
+                    </button>
+
+                  </div>
                 )}
               </div>
             );

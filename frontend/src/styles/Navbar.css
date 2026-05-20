@@ -1,117 +1,193 @@
+/* =========================
+   SAAS NAVBAR (MODERN)
+========================= */
+
 .navbar {
-  height: 60px;
-  background-color: #1e3a8a;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e2e8f0;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 30px;
-  color: white;
+
+  padding: 0 24px;
+  color: #0f172a;
+
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
+
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
 }
+
+/* =========================
+   LOGO
+========================= */
 
 .logo {
-  font-size: 22px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #1e293b;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-/* NAV LINKS */
+/* =========================
+   NAV LINKS (DESKTOP)
+========================= */
+
 .nav-links {
   list-style: none;
   display: flex;
-  gap: 20px;
+  gap: 18px;
+  align-items: center;
 }
 
 .nav-links li a {
-  color: white;
+  color: #475569;
   text-decoration: none;
-  font-size: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 8px;
+  transition: all 0.2s ease;
 }
 
-/* .nav-links li a:hover {
-  text-decoration: underline;
-} */
+.nav-links li a:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
 
-/* PROFILE ICON */
-.profile-wrapper {
+/* =========================
+   PROFILE ICON (SAAS STYLE)
+========================= */
+
+.profile-container {
   position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .profile-icon {
   width: 38px;
   height: 38px;
-  background-color: #2563eb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
   color: white;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
+  font-weight: 600;
   cursor: pointer;
   user-select: none;
+  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.25);
+  transition: transform 0.2s ease;
 }
 
-/* DROPDOWN */
+.profile-icon:hover {
+  transform: scale(1.05);
+}
+
+/* =========================
+   DROPDOWN (MODERN CARD)
+========================= */
+
 .profile-dropdown {
   position: absolute;
   right: 0;
-  top: 50px;
-  width: 230px;
-  background-color: white;
-  color: #1f2937;
-  border-radius: 8px;
+  top: 52px;
+
+  width: 260px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+
   padding: 14px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+
+  animation: fadeIn 0.2s ease;
 }
 
-.profile-name {
-  font-weight: 600;
-  margin-bottom: 4px;
+/* animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.profile-email {
+/* dropdown text */
+.profile-dropdown p {
+  margin: 6px 0;
   font-size: 13px;
-  color: #6b7280;
-  word-break: break-all;
+  color: #334155;
+  line-height: 1.4;
 }
 
-.profile-role {
-  margin-top: 8px;
-  font-size: 14px;
+.profile-dropdown strong {
+  color: #0f172a;
 }
 
-.profile-role span {
+.role {
+  margin-top: 6px;
   font-weight: 600;
   color: #2563eb;
 }
 
+/* divider */
 .profile-dropdown hr {
   margin: 12px 0;
   border: none;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #e2e8f0;
 }
 
-/* LOGOUT BUTTON */
-.logout-btn {
+/* =========================
+   LOGOUT BUTTON (SAAS STYLE)
+========================= */
+
+.profile-dropdown button {
   width: 100%;
-  background-color: #dc2626;
+  padding: 10px;
+  border-radius: 10px;
   border: none;
-  padding: 8px;
+
+  background: #ef4444;
   color: white;
+  font-weight: 600;
   cursor: pointer;
-  border-radius: 4px;
-  font-size: 14px;
+
+  transition: all 0.2s ease;
 }
 
-.logout-btn:hover {
-  background-color: #b91c1c;
+.profile-dropdown button:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
 }
 
-/* MOBILE */
+/* =========================
+   MOBILE MENU
+========================= */
+
 @media (max-width: 768px) {
   .nav-links {
     display: none;
+  }
+
+  .navbar {
+    padding: 0 16px;
+  }
+
+  .logo {
+    font-size: 16px;
   }
 }

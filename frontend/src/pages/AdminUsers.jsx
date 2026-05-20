@@ -74,9 +74,10 @@ export default function AdminUsers() {
   // ================= FILTER USERS =================
   const filteredUsers = (users || [])
     .filter((u) => u?.role === view)
-    .filter((user) =>
-      user?.name?.toLowerCase().includes(search.toLowerCase()) ||
-      user?.email?.toLowerCase().includes(search.toLowerCase())
+    .filter(
+      (user) =>
+        user?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        user?.email?.toLowerCase().includes(search.toLowerCase()),
     );
 
   // ================= EDIT =================
@@ -136,7 +137,6 @@ export default function AdminUsers() {
   return (
     <div className="admin-users-container">
       <div className="users-card">
-
         {/* REGISTER VIEW */}
         {showAddForm ? (
           <div className="register-wrapper">
@@ -168,19 +168,24 @@ export default function AdminUsers() {
                   </button>
                 </div>
 
-                <button className="add-btn" onClick={() => setShowAddForm(true)}>
+                <button
+                  className="add-btn"
+                  onClick={() => setShowAddForm(true)}
+                >
                   + Add User
                 </button>
               </div>
             </div>
 
             {/* SEARCH */}
-            <input
-              className="search-input"
-              placeholder={`Search ${view}s...`}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
+            <div className="toolbar">
+              <input
+                className="search-input"
+                placeholder={`Search ${view}s...`}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
 
             {/* TABLE */}
             <table className="users-table">
@@ -197,7 +202,6 @@ export default function AdminUsers() {
               <tbody>
                 {filteredUsers.map((user) => (
                   <tr key={user._id}>
-
                     {/* NAME */}
                     <td>
                       {editingUser === user._id ? (
@@ -256,7 +260,10 @@ export default function AdminUsers() {
                           <select
                             value={formData.floor}
                             onChange={(e) =>
-                              setFormData({ ...formData, floor: e.target.value })
+                              setFormData({
+                                ...formData,
+                                floor: e.target.value,
+                              })
                             }
                           >
                             <option value="">Select Floor</option>
@@ -285,9 +292,7 @@ export default function AdminUsers() {
                         </>
                       ) : (
                         <>
-                          <button onClick={() => startEdit(user)}>
-                            Edit
-                          </button>
+                          <button onClick={() => startEdit(user)}>Edit</button>
                           <button onClick={() => deleteUser(user._id)}>
                             Delete
                           </button>
@@ -298,7 +303,6 @@ export default function AdminUsers() {
                         <span>Processing...</span>
                       )}
                     </td>
-
                   </tr>
                 ))}
               </tbody>

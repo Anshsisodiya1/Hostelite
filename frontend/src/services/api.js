@@ -1,13 +1,17 @@
 import axios from "axios";
 
-// const API = axios.create({
-//   baseURL: import.meta.env.VITE_API_URL,
-// });
+// auto-detect environment
+const BASE_URL =
+  import.meta.env.VITE_API_URL ||
+  (window.location.hostname === "localhost"
+    ? "http://localhost:5001/api"
+    : "https://hostelite-1.onrender.com/api");
 
 const API = axios.create({
-  baseURL: "http://localhost:5001/api",
+  baseURL: BASE_URL,
 });
 
+// attach token automatically
 API.interceptors.request.use(
   (req) => {
     const token = localStorage.getItem("token");
@@ -18,9 +22,7 @@ API.interceptors.request.use(
 
     return req;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
 export default API;

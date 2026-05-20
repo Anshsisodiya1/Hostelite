@@ -1,0 +1,134 @@
+body {
+  background: #f5f7fb;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* CARD */
+.tm-card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  max-width: 400px;
+  margin: 20px auto;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* HEADER */
+.tm-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.tm-header-icon {
+  background: #2463eb;
+  color: white;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.tm-header-sub {
+  font-size: 12px;
+  color: gray;
+}
+
+/* LIVE DOT */
+.tm-live-dot {
+  margin-left: auto;
+  width: 8px;
+  height: 8px;
+  background: green;
+  border-radius: 50%;
+}
+
+/* ROWS */
+.tm-rows {
+  margin-top: 10px;
+}
+
+.tm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+}
+
+/* LEFT */
+.tm-row-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.tm-row-icon {
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+/* COLORS */
+.tm-row-icon--amber {
+  background: #fff7ed;
+  color: #d97706;
+}
+
+.tm-row-icon--blue {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.tm-row-icon--violet {
+  background: #f5f3ff;
+  color: #7c3aed;
+}
+
+/* TEXT */
+.tm-row-label {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.tm-row-time {
+  font-size: 12px;
+  color: gray;
+}
+
+.tm-row-value {
+  font-weight: 600;
+}
+
+.tm-row-nil {
+  color: gray;
+  font-style: italic;
+}
+
+/* EMPTY */
+.tm-card--empty {
+  text-align: center;
+  color: gray;
+}
+
+/* time row with icons */
+.tm-time-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.tm-time-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--t4);
+  font-family: var(--ff-mono);
+}

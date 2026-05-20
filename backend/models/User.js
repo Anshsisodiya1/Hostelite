@@ -48,9 +48,25 @@ const userSchema = new mongoose.Schema(
       default: "Hostelite",
     },
 
+    // ================= OTP (EMAIL / MOBILE) =================
     otp: String,
     otpExpires: Date,
+
+    // ================= DEVICE =================
     deviceToken: String,
+
+    /* =========================================================
+       🔐 2FA (NEW ADDITION)
+       ========================================================= */
+    twoFactorSecret: {
+      type: String,
+      default: null,
+    },
+
+    twoFactorEnabled: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
@@ -61,17 +77,14 @@ const userSchema = new mongoose.Schema(
    🔥 SAFE ROLE SWITCH LOGIC (IMPORTANT FOR PRODUCTION)
    ========================================================= */
 userSchema.pre("save", function (next) {
-  // If student → remove floor
   if (this.role === "student") {
     this.floor = null;
   }
 
-  // If warden → remove room
   if (this.role === "warden") {
     this.room = null;
   }
 
-  // If admin → clear both (clean state)
   if (this.role === "admin") {
     this.room = null;
     this.floor = null;
@@ -81,7 +94,7 @@ userSchema.pre("save", function (next) {
 });
 
 /* =========================================================
-   🔥 SAFE UPDATE HOOK (prevents stale assignments on update)
+   🔥 SAFE UPDATE HOOK
    ========================================================= */
 userSchema.pre("findOneAndUpdate", function (next) {
   const update = this.getUpdate();

@@ -1,6 +1,6 @@
 import Navbar from "./Navbar";
 import Footer from "./Footer";
-import AdminSidebar from "./AdminSidebar";
+import AdminSidebar from "./Adminsidebar";
 import { Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 

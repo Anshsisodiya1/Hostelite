@@ -6,9 +6,9 @@ import "../styles/StudentProfile.css";
 export default function StudentProfile() {
   const navigate = useNavigate();
 
-  const [loading, setLoading]     = useState(true);
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors]       = useState({});
+  const [loading, setLoading]       = useState(true);
+  const [submitted, setSubmitted]   = useState(false);
+  const [errors, setErrors]         = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -24,13 +24,18 @@ export default function StudentProfile() {
 
   useEffect(() => { checkProfile(); }, []);
 
-  const checkProfile = async () => {
-    try {
-      const res = await API.get("/profile/me");
-      if (res.data?.submitted) { setSubmitted(true); setFormData(res.data); }
-    } catch { console.log("No profile yet"); }
-    setLoading(false);
-  };
+const checkProfile = async () => {
+  try {
+    const res = await API.get("/profile/me");
+    console.log("PROFILE DATA:", res.data);          // check this
+    console.log("PHOTO URL:", res.data.profilePhoto); // should be full http://
+    if (res.data?.submitted) {
+      setSubmitted(true);
+      setFormData(res.data);
+    }
+  } catch { console.log("No profile yet"); }
+  setLoading(false);
+};
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -38,33 +43,41 @@ export default function StudentProfile() {
   };
 
   const validateForm = () => {
-    let e = {};
-    if (!formData.fullName.trim())      e.fullName = "Full name is required";
-    if (!formData.fatherName.trim())    e.fatherName = "Father's name is required";
-    if (!formData.motherName.trim())    e.motherName = "Mother's name is required";
-    if (!formData.phone.trim())         e.phone = "Phone number is required";
-    else if (!/^[0-9]{10}$/.test(formData.phone)) e.phone = "Must be 10 digits";
-    if (!formData.address.trim())       e.address = "Address is required";
+    const e = {};
+    if (!formData.fullName.trim())      e.fullName      = "Full name is required";
+    if (!formData.fatherName.trim())    e.fatherName    = "Father's name is required";
+    if (!formData.motherName.trim())    e.motherName    = "Mother's name is required";
+    if (!formData.phone.trim())         e.phone         = "Phone number is required";
+    else if (!/^[0-9]{10}$/.test(formData.phone))
+                                        e.phone         = "Must be 10 digits";
+    if (!formData.address.trim())       e.address       = "Address is required";
     if (!formData.aadhaarNumber.trim()) e.aadhaarNumber = "Aadhaar number is required";
-    else if (!/^[0-9]{12}$/.test(formData.aadhaarNumber)) e.aadhaarNumber = "Must be 12 digits";
-    if (!profilePhoto && !submitted)    e.profilePhoto = "Profile photo is required";
-    if (!aadhaarPhoto && !submitted)    e.aadhaarPhoto = "Aadhaar photo is required";
+    else if (!/^[0-9]{12}$/.test(formData.aadhaarNumber))
+                                        e.aadhaarNumber = "Must be 12 digits";
+    if (!profilePhoto && !submitted)    e.profilePhoto  = "Profile photo is required";
+    if (!aadhaarPhoto && !submitted)    e.aadhaarPhoto  = "Aadhaar photo is required";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
 
   const handleSubmit = async (ev) => {
     ev.preventDefault();
+      // Add this:
+  console.log("profilePhoto file:", profilePhoto);
+  console.log("aadhaarPhoto file:", aadhaarPhoto);
     if (!validateForm()) return;
+
     const data = new FormData();
-    data.append("fullName",      formData.fullName);
-    data.append("fatherName",    formData.fatherName);
-    data.append("motherName",    formData.motherName);
-    data.append("phone",         formData.phone);
-    data.append("address",       formData.address);
-    data.append("aadhaarNumber", formData.aadhaarNumber);
+    data.append("fullName",         formData.fullName);
+    data.append("fatherName",       formData.fatherName);
+    data.append("motherName",       formData.motherName);
+    data.append("phone",            formData.phone);
+    data.append("address",          formData.address);
+    data.append("permanentAddress", formData.address); // satisfies schema required field
+    data.append("aadhaarNumber",    formData.aadhaarNumber);
     if (profilePhoto) data.append("profilePhoto", profilePhoto);
     if (aadhaarPhoto) data.append("aadhaarPhoto", aadhaarPhoto);
+
     try {
       setSubmitting(true);
       await API.post("/profile/submit", data);
@@ -79,15 +92,17 @@ export default function StudentProfile() {
 
   const handleProfilePhotoChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setProfilePhoto(file);
-    if (file) setProfilePreview(URL.createObjectURL(file));
+    setProfilePreview(URL.createObjectURL(file));
     setErrors({ ...errors, profilePhoto: "" });
   };
 
   const handleAadhaarPhotoChange = (e) => {
     const file = e.target.files[0];
+    if (!file) return;
     setAadhaarPhoto(file);
-    if (file) setAadhaarPreview(URL.createObjectURL(file));
+    setAadhaarPreview(URL.createObjectURL(file));
     setErrors({ ...errors, aadhaarPhoto: "" });
   };
 
@@ -103,16 +118,14 @@ export default function StudentProfile() {
     );
   }
 
-  /* ── View mode (submitted) ── */
+  /* ── View mode (after submission) ── */
   if (submitted) {
     const initials = formData.fullName
-      ? formData.fullName.split(" ").map(w => w[0]).slice(0,2).join("").toUpperCase()
+      ? formData.fullName.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()
       : "?";
 
     return (
       <div className="sp-wrapper">
-
-        {/* Back */}
         <button className="sp-back" onClick={() => navigate("/dashboard")}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
           Back to Dashboard
@@ -140,9 +153,7 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Info sections */}
         <div className="sp-sections">
-
           {/* Personal info */}
           <div className="sp-section-card">
             <div className="sp-section-head">
@@ -152,12 +163,12 @@ export default function StudentProfile() {
               <h2>Personal Information</h2>
             </div>
             <div className="sp-info-grid">
-              <InfoField label="Full Name"     value={formData.fullName} />
-              <InfoField label="Father's Name" value={formData.fatherName} />
-              <InfoField label="Mother's Name" value={formData.motherName} />
-              <InfoField label="Phone Number"  value={formData.phone} mono />
-              <InfoField label="Aadhaar Number" value={formData.aadhaarNumber} mono masked />
-              <InfoField label="Permanent Address" value={formData.address} wide />
+              <InfoField label="Full Name"          value={formData.fullName} />
+              <InfoField label="Father's Name"      value={formData.fatherName} />
+              <InfoField label="Mother's Name"      value={formData.motherName} />
+              <InfoField label="Phone Number"       value={formData.phone} mono />
+              <InfoField label="Aadhaar Number"     value={formData.aadhaarNumber} mono masked />
+              <InfoField label="Permanent Address"  value={formData.address || formData.permanentAddress} wide />
             </div>
           </div>
 
@@ -178,7 +189,6 @@ export default function StudentProfile() {
               </div>
             </div>
           )}
-
         </div>
       </div>
     );
@@ -186,18 +196,16 @@ export default function StudentProfile() {
 
   /* ── Form mode ── */
   const fields = [
-    { name: "fullName",      label: "Full Name",            placeholder: "Enter your full legal name",    half: true },
-    { name: "fatherName",    label: "Father's Name",        placeholder: "Enter father's full name",       half: true },
-    { name: "motherName",    label: "Mother's Name",        placeholder: "Enter mother's full name",       half: true },
-    { name: "phone",         label: "Phone Number",         placeholder: "10-digit mobile number",         half: true },
-    { name: "address",       label: "Permanent Address",    placeholder: "Full address with city & state", half: false },
-    { name: "aadhaarNumber", label: "Aadhaar Number",       placeholder: "12-digit Aadhaar number",        half: true },
+    { name: "fullName",      label: "Full Name",         placeholder: "Enter your full legal name",     half: true },
+    { name: "fatherName",    label: "Father's Name",     placeholder: "Enter father's full name",        half: true },
+    { name: "motherName",    label: "Mother's Name",     placeholder: "Enter mother's full name",        half: true },
+    { name: "phone",         label: "Phone Number",      placeholder: "10-digit mobile number",          half: true },
+    { name: "address",       label: "Permanent Address", placeholder: "Full address with city & state",  half: false },
+    { name: "aadhaarNumber", label: "Aadhaar Number",    placeholder: "12-digit Aadhaar number",         half: true },
   ];
 
   return (
     <div className="sp-wrapper">
-
-      {/* Back */}
       <button className="sp-back" onClick={() => navigate("/dashboard")}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
         Back to Dashboard
@@ -217,11 +225,9 @@ export default function StudentProfile() {
 
       <form onSubmit={handleSubmit} className="sp-form" noValidate>
 
-        {/* Personal info section */}
+        {/* Personal info */}
         <div className="sp-form-section">
-          <div className="sp-form-section-title">
-            <span>Personal Information</span>
-          </div>
+          <div className="sp-form-section-title"><span>Personal Information</span></div>
           <div className="sp-form-grid">
             {fields.map((f, i) => (
               <div
@@ -250,11 +256,9 @@ export default function StudentProfile() {
           </div>
         </div>
 
-        {/* Documents section */}
+        {/* Documents */}
         <div className="sp-form-section">
-          <div className="sp-form-section-title">
-            <span>Identity Documents</span>
-          </div>
+          <div className="sp-form-section-title"><span>Identity Documents</span></div>
           <div className="sp-form-grid">
 
             {/* Profile Photo */}
@@ -328,18 +332,11 @@ export default function StudentProfile() {
           Your information is stored securely and used only for hostel administration purposes.
         </div>
 
-        {/* Submit */}
         <button type="submit" className="sp-submit" disabled={submitting}>
           {submitting ? (
-            <>
-              <span className="sp-submit-spinner" />
-              Submitting Profile…
-            </>
+            <><span className="sp-submit-spinner" />Submitting Profile…</>
           ) : (
-            <>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-              Submit Profile
-            </>
+            <><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Submit Profile</>
           )}
         </button>
 
@@ -348,9 +345,9 @@ export default function StudentProfile() {
   );
 }
 
-/* ── Sub-components ── */
+/* ── InfoField sub-component ── */
 function InfoField({ label, value, mono, masked, wide }) {
-  const display = masked
+  const display = masked && value
     ? value.replace(/(\d{4})(\d{4})(\d{4})/, "$1 XXXX $3")
     : value;
   return (

@@ -22,3 +22,5 @@ yarn-error.log*
 
 # Firebase secret key
 backend/serviceAccountKey.json
+
+

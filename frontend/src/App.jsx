@@ -9,6 +9,7 @@ import Layout from "./components/Layout";
 
 import Complaint from "./pages/Complaint";
 import WardenComplaints from "./pages/WardenComplaints";
+import WardenRoomRequests from "./pages/WardenRoomRequests";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPayments from "./pages/AdminPayments";
 import StudentPayment from "./pages/StudentPayment";
@@ -24,22 +25,22 @@ import RazorpayPayment from "./pages/RazorpayPayment";
 import UpiPayment from "./pages/UpiPayment";
 import DebitCardPayment from "./pages/DebitCardPayment";
 import ReportCard from "./pages/ReportCard";
-// import AddHostel from "./pages/AddHostel";
+import CMSAdmin from "./pages/CMSAdmin";
 
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Toast Notifications */}
       <Toaster position="top-right" reverseOrder={false} />
 
       <Routes>
-        {/* ================= PUBLIC ROUTES ================= */}
+
+        {/* ───────────────── PUBLIC ───────────────── */}
         <Route path="/" element={<LoginPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* ================= REGISTER ROUTE (ADMIN ONLY) ================= */}
+        {/* ───────────── ADMIN REGISTER ───────────── */}
         <Route
           path="/register"
           element={
@@ -49,7 +50,7 @@ export default function App() {
           }
         />
 
-        {/* ================= PROTECTED LAYOUT ROUTES ================= */}
+        {/* ───────────── PROTECTED LAYOUT ───────────── */}
         <Route
           element={
             <ProtectedRoute>
@@ -57,10 +58,10 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-          {/* DASHBOARD */}
+
           <Route path="/dashboard" element={<Dashboard />} />
 
-          {/* ================= STUDENT ROUTES ================= */}
+          {/* ───────────── STUDENT ───────────── */}
           <Route
             path="/complaints"
             element={
@@ -133,7 +134,7 @@ export default function App() {
             }
           />
 
-          {/* ================= WARDEN ROUTES ================= */}
+          {/* ───────────── WARDEN ───────────── */}
           <Route
             path="/warden/complaints"
             element={
@@ -152,7 +153,16 @@ export default function App() {
             }
           />
 
-          {/* ================= ADMIN ROUTES ================= */}
+          <Route
+            path="/warden/room-requests"
+            element={
+              <ProtectedRoute role="warden">
+                <WardenRoomRequests />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* ───────────── ADMIN ───────────── */}
           <Route
             path="/admin/users"
             element={
@@ -207,21 +217,24 @@ export default function App() {
             }
           />
 
-          {/* ================= COMMON ROUTES ================= */}
-          <Route path="/today/meals" element={<TodayMeal />} />
-
-          {/* <Route
-            path="/admin/add-hostel"
+          {/* ⭐ NEW CMS ROUTE */}
+          <Route
+            path="/admin/cms"
             element={
               <ProtectedRoute role="admin">
-                <AddHostel />
+                <CMSAdmin />
               </ProtectedRoute>
             }
-          /> */}
+          />
+
+          {/* ───────────── COMMON ───────────── */}
+          <Route path="/today/meals" element={<TodayMeal />} />
+
         </Route>
 
-        {/* ================= FALLBACK ROUTE ================= */}
+        {/* ───────────── FALLBACK ───────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
+
       </Routes>
     </BrowserRouter>
   );

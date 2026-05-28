@@ -2,22 +2,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import Register from "./Register";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, Send, Clock, CheckCircle, XCircle } from "lucide-react";
 import "../styles/AdminUsers.css";
 
 export default function AdminUsers() {
-  const [users, setUsers]   = useState([]);
-  const [rooms, setRooms]   = useState([]);
-  const [floors, setFloors] = useState([]);
+  const [users, setUsers]     = useState([]);
+  const [rooms, setRooms]     = useState([]);
+  const [floors, setFloors]   = useState([]);
   const [profileMap, setProfileMap] = useState({});
+  const [requestMap, setRequestMap] = useState({}); // studentId → latest request
 
-  const [view, setView]       = useState("student");
-  const [loading, setLoading] = useState(true);
+  const [view, setView]         = useState("student");
+  const [loading, setLoading]   = useState(true);
 
-  const [editingUser, setEditingUser]     = useState(null);
+  const [editingUser, setEditingUser]       = useState(null);
   const [processingUser, setProcessingUser] = useState(null);
 
-  const [search, setSearch]         = useState("");
+  const [search, setSearch]           = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -37,41 +38,38 @@ export default function AdminUsers() {
         API.get("/rooms"),
         API.get("/floors"),
         API.get("/profile/all"),
+        API.get("/room-requests/admin/all"), // ← new
       ]);
 
       if (responses[0].status === "fulfilled") {
         setUsers(responses[0].value.data || []);
-      } else {
-        console.error("Users error:", responses[0].reason);
       }
-
       if (responses[1].status === "fulfilled") {
         setRooms(responses[1].value.data || []);
-      } else {
-        console.error("Rooms error:", responses[1].reason);
       }
-
       if (responses[2].status === "fulfilled") {
         setFloors(responses[2].value.data || []);
-      } else {
-        console.error("Floors error:", responses[2].reason);
       }
-
       if (responses[3].status === "fulfilled") {
         const profiles = responses[3].value.data || [];
         const map = {};
         profiles.forEach((p) => {
-          if (p.user?._id || p.user) {
-            const uid = p.user?._id || p.user;
-            map[uid] = {
-              profilePhoto: p.profilePhoto || null,
-              fullName:     p.fullName     || null,
-            };
-          }
+          const uid = p.user?._id || p.user;
+          if (uid) map[uid] = { profilePhoto: p.profilePhoto || null, fullName: p.fullName || null };
         });
         setProfileMap(map);
-      } else {
-        console.warn("Profiles fetch failed (non-critical):", responses[3].reason);
+      }
+      if (responses[4].status === "fulfilled") {
+        // Build map: studentId → most recent request
+        const reqs = responses[4].value.data || [];
+        const map = {};
+        reqs.forEach((r) => {
+          const sid = r.student?._id || r.student;
+          if (!sid) return;
+          // keep the most recent one (array is sorted -createdAt)
+          if (!map[sid]) map[sid] = r;
+        });
+        setRequestMap(map);
       }
     } catch (err) {
       console.error("LOAD DATA ERROR:", err);
@@ -91,19 +89,37 @@ export default function AdminUsers() {
   const startEdit = (user) => {
     setEditingUser(user._id);
     setFormData({
-      name:  user.name        || "",
-      email: user.email       || "",
-      role:  user.role        || "",
-      room:  user.room?._id   || "",
-      floor: user.floor?._id  || "",
+      name:  user.name       || "",
+      email: user.email      || "",
+      role:  user.role       || "",
+      room:  user.room?._id  || "",
+      floor: user.floor?._id || "",
     });
   };
   const cancelEdit = () => setEditingUser(null);
 
-  const submitEdit = async (id) => {
+  // ── Submit edit ──
+  // For wardens: still direct PUT (floor assignment, no approval needed)
+  // For students: if room changed → send room request; other fields → direct PUT
+  const submitEdit = async (id, user) => {
     try {
       setProcessingUser(id);
-      await API.put(`/users/${id}`, formData);
+
+      if (view === "student" && formData.room && formData.room !== (user.room?._id || "")) {
+        // Room changed → send assignment request to warden
+        await API.post("/room-requests", {
+          studentId: id,
+          roomId: formData.room,
+        });
+        // Also update name/email directly if changed
+        const nonRoomData = { name: formData.name, email: formData.email };
+        await API.put(`/users/${id}`, nonRoomData);
+        alert("✅ Room assignment request sent to warden for approval!");
+      } else {
+        // No room change or warden tab → direct update
+        await API.put(`/users/${id}`, formData);
+      }
+
       await loadData();
       cancelEdit();
     } catch (err) {
@@ -126,6 +142,16 @@ export default function AdminUsers() {
     }
   };
 
+  const cancelRequest = async (reqId) => {
+    if (!window.confirm("Cancel this pending room request?")) return;
+    try {
+      await API.delete(`/room-requests/${reqId}`);
+      await loadData();
+    } catch (err) {
+      alert(err.response?.data?.message || "Could not cancel request");
+    }
+  };
+
   const openProfile = async (userId) => {
     try {
       const res = await API.get(`/profile/user/${userId}`);
@@ -136,9 +162,36 @@ export default function AdminUsers() {
   };
 
   const getInitials = (name) =>
-    name
-      ? name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase()
-      : "?";
+    name ? name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() : "?";
+
+  /* ── Request status pill ── */
+  const RequestPill = ({ studentId }) => {
+    const req = requestMap[studentId];
+    if (!req) return null;
+
+    const map = {
+      pending:  { icon: <Clock size={11} />,        label: "Pending Approval", cls: "req-pill--pending"  },
+      approved: { icon: <CheckCircle size={11} />,  label: "Room Approved",    cls: "req-pill--approved" },
+      rejected: { icon: <XCircle size={11} />,      label: "Request Rejected", cls: "req-pill--rejected" },
+    };
+    const info = map[req.status] || map.pending;
+
+    return (
+      <span className={`req-pill ${info.cls}`}>
+        {info.icon}
+        {info.label}
+        {req.status === "pending" && (
+          <button
+            className="req-pill__cancel"
+            onClick={(e) => { e.stopPropagation(); cancelRequest(req._id); }}
+            title="Cancel request"
+          >
+            ×
+          </button>
+        )}
+      </span>
+    );
+  };
 
   if (loading) {
     return (
@@ -178,8 +231,21 @@ export default function AdminUsers() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <span className="au-count">{filteredUsers.length} {view}{filteredUsers.length !== 1 ? "s" : ""}</span>
+              <span className="au-count">
+                {filteredUsers.length} {view}{filteredUsers.length !== 1 ? "s" : ""}
+              </span>
             </div>
+
+            {/* Info banner for student tab */}
+            {view === "student" && (
+              <div className="au-info-banner">
+                <Send size={13} />
+                <span>
+                  Changing a student's room sends an approval request to their floor warden.
+                  The room is only assigned after warden approval.
+                </span>
+              </div>
+            )}
 
             <table className="users-table">
               <thead>
@@ -187,7 +253,7 @@ export default function AdminUsers() {
                   <th>Name</th>
                   <th>Email</th>
                   <th>Role</th>
-                  <th>{view === "student" ? "Room" : "Floor"}</th>
+                  <th>{view === "student" ? "Room / Request" : "Floor"}</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -195,9 +261,7 @@ export default function AdminUsers() {
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="au-empty-row">
-                      No {view}s found
-                    </td>
+                    <td colSpan={5} className="au-empty-row">No {view}s found</td>
                   </tr>
                 ) : (
                   filteredUsers.map((user) => {
@@ -286,14 +350,20 @@ export default function AdminUsers() {
                               </select>
                             )
                           ) : (
-                            <span className="au-room">
-                              {view === "student"
-                                ? user.room?.roomNumber || <span className="au-unassigned">—</span>
-                                : user.floor?.floorNumber
-                                  ? `Floor ${user.floor.floorNumber}`
-                                  : <span className="au-unassigned">—</span>
-                              }
-                            </span>
+                            <div className="au-room-cell">
+                              <span className="au-room">
+                                {view === "student"
+                                  ? user.room?.roomNumber || <span className="au-unassigned">—</span>
+                                  : user.floor?.floorNumber
+                                    ? `Floor ${user.floor.floorNumber}`
+                                    : <span className="au-unassigned">—</span>
+                                }
+                              </span>
+                              {/* Show request status pill for students */}
+                              {view === "student" && (
+                                <RequestPill studentId={user._id} />
+                              )}
+                            </div>
                           )}
                         </td>
 
@@ -303,12 +373,14 @@ export default function AdminUsers() {
                             <>
                               <button
                                 className="au-btn au-btn--save"
-                                onClick={() => submitEdit(user._id)}
+                                onClick={() => submitEdit(user._id, user)}
                                 disabled={processingUser === user._id}
                               >
                                 {processingUser === user._id ? "Saving…" : "Save"}
                               </button>
-                              <button className="au-btn au-btn--cancel" onClick={cancelEdit}>Cancel</button>
+                              <button className="au-btn au-btn--cancel" onClick={cancelEdit}>
+                                Cancel
+                              </button>
                             </>
                           ) : (
                             <>

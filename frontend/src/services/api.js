@@ -22,3 +22,33 @@ API.interceptors.request.use(
 );
 
 export default API;
+
+/* ── CMS helpers ─────────────────────────────────────────
+   Import in section components:
+   import { cmsApi as api, buildFormData } from "../../services/api";
+   ────────────────────────────────────────────────────── */
+export const cmsApi = {
+  get:    (path)       => API.get(path).then(r => r.data),
+  post:   (path, body) => API.post(path, body).then(r => r.data),
+  put:    (path, body) => API.put(path, body).then(r => r.data),
+  delete: (path)       => API.delete(path).then(r => r.data),
+
+  postForm: (path, fd) =>
+    API.post(path, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then(r => r.data),
+
+  putForm: (path, fd) =>
+    API.put(path, fd, {
+      headers: { "Content-Type": "multipart/form-data" },
+    }).then(r => r.data),
+};
+
+export function buildFormData(obj, imageFile, imageKey = "image") {
+  const fd = new FormData();
+  Object.entries(obj).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) fd.append(k, v);
+  });
+  if (imageFile) fd.append(imageKey, imageFile);
+  return fd;
+}

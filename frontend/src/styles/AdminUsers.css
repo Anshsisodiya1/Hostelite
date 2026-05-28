@@ -411,6 +411,95 @@
 
 .back-btn:hover { text-decoration: underline; }
 
+/* ══════════════════════════════════════════════
+   ADD THESE to your existing AdminUsers.css
+   (append at the bottom of the file)
+══════════════════════════════════════════════ */
+
+/* ── Info banner (room request flow explanation) ── */
+.au-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1rem;
+  margin-bottom: 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: #1d4ed8;
+}
+
+/* ── Room cell wrapper (room number + pill stacked) ── */
+.au-room-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  align-items: flex-start;
+}
+
+/* ── Request status pills ── */
+.req-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.req-pill--pending {
+  background: #fffbeb;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+.req-pill--approved {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.req-pill--rejected {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Cancel button inside pending pill */
+.req-pill__cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.12);
+  color: inherit;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  margin-left: 2px;
+  transition: background 0.12s;
+}
+.req-pill__cancel:hover {
+  background: rgba(0,0,0,0.25);
+}
+
+/* ── Dashboard priority-banner blue variant ── */
+.priority-banner--blue {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+.priority-banner--blue strong {
+  color: #1e40af;
+}
+
 /* =========================
    MOBILE RESPONSIVE
 ========================= */

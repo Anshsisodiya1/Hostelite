@@ -15,12 +15,11 @@ app.use(
   cors({
     origin: [
       "http://localhost:5173",
-      "https://hostelite-olive.vercel.app",
+      "https://hostelite-red.vercel.app",
     ],
     credentials: true,
   })
 );
-
 app.options("*", cors());
 
 

@@ -10,7 +10,7 @@ import Layout from "./components/Layout";
 
 import Complaint from "./pages/Complaint";
 import WardenComplaints from "./pages/WardenComplaints";
-import WardenRoomRequests from "./pages/WardenRoomRequests";
+import WardenRoomRequests from "./pages/Wardenroomrequests";
 import AdminUsers from "./pages/AdminUsers";
 import AdminPayments from "./pages/AdminPayments";
 import StudentPayment from "./pages/StudentPayment";

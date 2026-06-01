@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import LoginPage from "./pages/LoginPage";
+import AdminLogin from "./pages/AdminLogin";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 
@@ -26,7 +27,6 @@ import UpiPayment from "./pages/UpiPayment";
 import DebitCardPayment from "./pages/DebitCardPayment";
 import ReportCard from "./pages/ReportCard";
 import CMSAdmin from "./pages/CMSAdmin";
-
 import { Toaster } from "react-hot-toast";
 
 export default function App() {
@@ -35,9 +35,9 @@ export default function App() {
       <Toaster position="top-right" reverseOrder={false} />
 
       <Routes>
-
         {/* ───────────────── PUBLIC ───────────────── */}
         <Route path="/" element={<LoginPage />} />
+        <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* ───────────── ADMIN REGISTER ───────────── */}
@@ -58,8 +58,18 @@ export default function App() {
             </ProtectedRoute>
           }
         >
-
+          {/* Shared dashboard — works for student & warden */}
           <Route path="/dashboard" element={<Dashboard />} />
+
+          {/* Admin dashboard — same component, dedicated route */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <ProtectedRoute role="admin">
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
           {/* ───────────── STUDENT ───────────── */}
           <Route
@@ -217,7 +227,6 @@ export default function App() {
             }
           />
 
-          {/* ⭐ NEW CMS ROUTE */}
           <Route
             path="/admin/cms"
             element={
@@ -229,12 +238,10 @@ export default function App() {
 
           {/* ───────────── COMMON ───────────── */}
           <Route path="/today/meals" element={<TodayMeal />} />
-
         </Route>
 
         {/* ───────────── FALLBACK ───────────── */}
         <Route path="*" element={<Navigate to="/" replace />} />
-
       </Routes>
     </BrowserRouter>
   );

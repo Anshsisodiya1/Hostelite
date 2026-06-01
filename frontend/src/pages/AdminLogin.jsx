@@ -14,7 +14,7 @@ import {
   Loader2,
 } from "lucide-react";
 
-export default function Login() {
+export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -34,7 +34,7 @@ export default function Login() {
   const otpRefs = useRef([]);
 
   useEffect(() => {
-    const saved = localStorage.getItem("rememberedEmail");
+    const saved = localStorage.getItem("adminRememberedEmail");
 
     if (saved) {
       setEmail(saved);
@@ -44,7 +44,7 @@ export default function Login() {
     emailRef.current?.focus();
   }, []);
 
-  const validateEmail = (e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   /* ================= OTP ================= */
 
@@ -82,7 +82,7 @@ export default function Login() {
     e.preventDefault();
   };
 
-  /* ================= LOGIN ================= */
+  /* ================= ADMIN LOGIN ================= */
 
   const loginHandler = async (e) => {
     e.preventDefault();
@@ -102,11 +102,11 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Pass portal: "user" so backend enforces role restriction server-side
+      // Pass portal: "admin" so backend enforces admin-only server-side
       const res = await API.post("/auth/login", {
         email,
         password,
-        portal: "user",
+        portal: "admin",
       });
 
       if (res.data.require2FA) {
@@ -117,16 +117,16 @@ export default function Login() {
 
       if (res.data.token && res.data.user) {
         rememberMe
-          ? localStorage.setItem("rememberedEmail", email)
-          : localStorage.removeItem("rememberedEmail");
+          ? localStorage.setItem("adminRememberedEmail", email)
+          : localStorage.removeItem("adminRememberedEmail");
 
         login(res.data.token, res.data.user);
-        navigate("/dashboard");
+        navigate("/admin/dashboard");
       }
     } catch (err) {
-      // Backend returns 403 when an admin tries this portal
+      // Backend returns 403 when a non-admin tries the admin portal
       if (err.response?.status === 403) {
-        setError("Administrators must login through the Admin Portal.");
+        setError("Only administrators can login from this portal.");
       } else {
         setError(
           err.response?.data?.message || "Login failed. Please try again."
@@ -150,18 +150,18 @@ export default function Login() {
     setLoading(true);
 
     try {
-      // Pass portal: "user" here too so 2FA verify also enforces the role
+      // Pass portal: "admin" here too
       const res = await API.post("/auth/verify-2fa-login", {
         userId,
         token: otpString,
-        portal: "user",
+        portal: "admin",
       });
 
       login(res.data.token, res.data.user);
-      navigate("/dashboard");
+      navigate("/admin/dashboard");
     } catch (err) {
       if (err.response?.status === 403) {
-        setError("Administrators must login through the Admin Portal.");
+        setError("Only administrators can login from this portal.");
       } else {
         setError("Invalid code. Please try again.");
       }
@@ -179,7 +179,7 @@ export default function Login() {
     return (
       <div className="login-page">
         <div className="login-container">
-          <h1 className="login-title">Verify Identity</h1>
+          <h1 className="login-title">Admin Verification</h1>
 
           <p className="login-subtitle">
             Enter the 6-digit code from your authenticator app
@@ -231,98 +231,93 @@ export default function Login() {
   /* ================= LOGIN SCREEN ================= */
 
   return (
-    <div className="login-container">
-      <h1 className="login-title">Welcome back</h1>
+    <div className="login-page">
+      <div className="login-container">
+        <h1 className="login-title">Admin Portal</h1>
 
-      <p className="login-subtitle">
-        Continue to your personalized hostel dashboard.
-      </p>
+        <p className="login-subtitle">
+          Sign in to access the Hostelite Administration Dashboard
+        </p>
 
-      {error && (
-        <div className="error-box">
-          <AlertCircle size={15} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <form onSubmit={loginHandler} className="login-form" noValidate>
-        <div className="form-group">
-          <label>Email</label>
-
-          <div className="input-box">
-            <Mail size={18} className="left-icon" />
-
-            <input
-              ref={emailRef}
-              type="email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) => {
-                setEmail(e.target.value);
-                setError("");
-              }}
-              autoComplete="email"
-            />
+        {error && (
+          <div className="error-box">
+            <AlertCircle size={15} />
+            <span>{error}</span>
           </div>
-        </div>
+        )}
 
-        <div className="form-group">
-          <div className="form-row"></div>
-          <label>Password</label>
+        <form onSubmit={loginHandler} className="login-form" noValidate>
+          <div className="form-group">
+            <label>Email</label>
 
-          <div className="input-box">
-            <Lock size={18} className="left-icon-l" />
+            <div className="input-box">
+              <Mail size={18} className="left-icon" />
 
-            <input
-              type={showPassword ? "text" : "password"}
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setError("");
-              }}
-              autoComplete="current-password"
-            />
-
-            <button
-              type="button"
-              className="right-icon"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-            </button>
-            <span
-              className="forgot-password"
-              onClick={() => navigate("/forgot-password")}
-            >
-              Forgot password?
-            </span>
+              <input
+                ref={emailRef}
+                type="email"
+                placeholder="admin@hostelite.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
+                autoComplete="email"
+              />
+            </div>
           </div>
-        </div>
 
-        <label className="remember">
-          <input
-            type="checkbox"
-            checked={rememberMe}
-            onChange={(e) => setRememberMe(e.target.checked)}
-          />
-          Keep me signed in
-        </label>
+          <div className="form-group">
+            <label>Password</label>
 
-        <button type="submit" className="login-btn" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 size={18} className="spin" />
-              Signing in...
-            </>
-          ) : (
-            <>
-              Sign In
-              <ArrowRight size={18} />
-            </>
-          )}
-        </button>
-      </form>
+            <div className="input-box">
+              <Lock size={18} className="left-icon-l" />
+
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setError("");
+                }}
+                autoComplete="current-password"
+              />
+
+              <button
+                type="button"
+                className="right-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+
+          <label className="remember">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+            />
+            Keep me signed in
+          </label>
+
+          <button type="submit" className="login-btn" disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 size={18} className="spin" />
+                Signing in...
+              </>
+            ) : (
+              <>
+                Sign In
+                <ArrowRight size={18} />
+              </>
+            )}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }

@@ -5,9 +5,9 @@ const nodemailer = require("nodemailer");
 const speakeasy = require("speakeasy");
 const QRCode = require("qrcode");
 
-/* =========================================================
-   ✅ REGISTER
-========================================================= */
+
+// REGISTER
+
 const registerUser = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
@@ -61,12 +61,19 @@ const registerUser = async (req, res) => {
   }
 };
 
-/* =========================================================
-   ✅ LOGIN (ADMIN + 2FA SUPPORT)
-========================================================= */
+
+// LOGIN (with portal-based role enforcement)
+//
+// The frontend sends a "portal" field:
+//   portal: "admin" → only role === "admin" is allowed
+//   portal: "user"  → only role === "student" or "warden" is allowed
+//
+// This enforces separation on the backend so it cannot be bypassed
+// by directly calling the API.
+
 const loginUser = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, portal } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -90,7 +97,20 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // 🔐 2FA CHECK
+    // PORTAL ROLE ENFORCEMENT
+    if (portal === "admin" && user.role !== "admin") {
+      return res.status(403).json({
+        message: "Only administrators can login from this portal.",
+      });
+    }
+
+    if (portal === "user" && user.role === "admin") {
+      return res.status(403).json({
+        message: "Administrators must login through the Admin Portal.",
+      });
+    }
+
+    // 2FA CHECK
     if (user.twoFactorEnabled) {
       return res.json({
         require2FA: true,
@@ -107,7 +127,7 @@ const loginUser = async (req, res) => {
         role: user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     res.json({
@@ -125,9 +145,9 @@ const loginUser = async (req, res) => {
   }
 };
 
-/* =========================================================
-   🔐 GENERATE 2FA (QR)
-========================================================= */
+
+// GENERATE 2FA (QR)
+
 const generate2FA = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
@@ -151,9 +171,9 @@ const generate2FA = async (req, res) => {
   }
 };
 
-/* =========================================================
-   🔐 VERIFY 2FA SETUP
-========================================================= */
+
+// VERIFY 2FA SETUP
+
 const verify2FASetup = async (req, res) => {
   try {
     const { token } = req.body;
@@ -181,17 +201,30 @@ const verify2FASetup = async (req, res) => {
   }
 };
 
-/* =========================================================
-   🔐 VERIFY 2FA LOGIN
-========================================================= */
+
+// VERIFY 2FA LOGIN (with portal-based role enforcement)
+
 const verify2FALogin = async (req, res) => {
   try {
-    const { userId, token } = req.body;
+    const { userId, token, portal } = req.body;
 
     const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // PORTAL ROLE ENFORCEMENT — same check as loginUser
+    if (portal === "admin" && user.role !== "admin") {
+      return res.status(403).json({
+        message: "Only administrators can login from this portal.",
+      });
+    }
+
+    if (portal === "user" && user.role === "admin") {
+      return res.status(403).json({
+        message: "Administrators must login through the Admin Portal.",
+      });
     }
 
     const verified = speakeasy.totp.verify({
@@ -213,7 +246,7 @@ const verify2FALogin = async (req, res) => {
         role: user.role,
       },
       process.env.JWT_SECRET,
-      { expiresIn: "7d" },
+      { expiresIn: "7d" }
     );
 
     res.json({
@@ -231,9 +264,9 @@ const verify2FALogin = async (req, res) => {
   }
 };
 
-/* =========================================================
-   📧 FORGOT PASSWORD
-========================================================= */
+
+// FORGOT PASSWORD
+
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -270,9 +303,9 @@ const forgotPassword = async (req, res) => {
   }
 };
 
-/* =========================================================
-   🔐 RESET PASSWORD
-========================================================= */
+
+// RESET PASSWORD
+
 const resetPassword = async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -300,9 +333,9 @@ const resetPassword = async (req, res) => {
   }
 };
 
-/* =========================================================
-   ✅ EXPORT ALL (IMPORTANT FIX)
-========================================================= */
+
+// EXPORT ALL
+
 module.exports = {
   registerUser,
   loginUser,

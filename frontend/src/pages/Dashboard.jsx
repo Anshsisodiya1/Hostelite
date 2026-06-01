@@ -43,6 +43,8 @@ import {
   MoreHorizontal,
   ArrowRight,
   Layers,
+  Calendar,
+  Bell,
 } from "lucide-react";
 
 /* ─── time greeting ─── */
@@ -257,7 +259,7 @@ export default function Dashboard() {
   }
 
   /* ════════════════════════════════════════════════
-     WARDEN DASHBOARD — MODERN REDESIGN
+     WARDEN DASHBOARD — REDESIGNED WHITE THEME
   ════════════════════════════════════════════════ */
   if (user.role === "warden") {
     const safeFloorStudents = Array.isArray(floorStudents) ? floorStudents : [];
@@ -278,11 +280,13 @@ export default function Dashboard() {
         s.email?.toLowerCase().includes(q) ||
         s.phone?.includes(q) ||
         s.phoneNumber?.includes(q) ||
-        s.branch?.toLowerCase().includes(q) ||
+        // s.branch?.toLowerCase().includes(q) ||
         s.department?.toLowerCase().includes(q) ||
         s.roomNumber?.toString().includes(q)
       );
     });
+
+    const totalComplaints = stats.complaints.pending + stats.complaints.resolved;
 
     return (
       <div className="dash dash--warden">
@@ -290,34 +294,40 @@ export default function Dashboard() {
 
           {/* ══ HERO ══ */}
           <section className="w-hero">
-            <div className="w-hero__bg-mesh" />
-            <div className="w-hero__content">
-              <div className="w-hero__left">
-                <div className="w-hero__tag">
-                  <span className="w-hero__tag-dot" />
-                  Floor {user.floor} · Warden
-                </div>
-                <h1 className="w-hero__name">{greeting()}, {user.name.split(" ")[0]}</h1>
-                <p className="w-hero__sub">
+            <div className="w-hero__left">
+              <div className="w-hero__eyebrow">
+                <span className="w-hero__floor-pill">
+                  <span className="w-hero__online-dot" />
+                  Floor {user.floor}
+                </span>
+                <span className="w-hero__date">
+                  <Calendar size={12} />
                   {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}
-                  &nbsp;·&nbsp; {totalStudents} residents on your floor
-                </p>
+                </span>
               </div>
-              <div className="w-hero__chips">
-                <div className="w-hero__chip w-hero__chip--amber">
-                  <AlertTriangle size={14} />
-                  <span>{stats.complaints.pending}</span>
-                  <small>Pending</small>
+              <h1 className="w-hero__name">{greeting()}, {user.name.split(" ")[0]}</h1>
+              <p className="w-hero__sub">{totalStudents} residents · {vacantRooms} rooms available · {stats.complaints.pending} open issues</p>
+            </div>
+            <div className="w-hero__stats">
+              <div className="w-hero__stat w-hero__stat--amber" onClick={() => navigate("/warden/complaints")}>
+                <div className="w-hero__stat-icon"><AlertTriangle size={16} /></div>
+                <div className="w-hero__stat-body">
+                  <span className="w-hero__stat-val">{stats.complaints.pending}</span>
+                  <span className="w-hero__stat-lbl">Pending issues</span>
                 </div>
-                <div className="w-hero__chip w-hero__chip--green">
-                  <CheckCircle size={14} />
-                  <span>{countResolvedToday()}</span>
-                  <small>Today</small>
+              </div>
+              <div className="w-hero__stat w-hero__stat--emerald">
+                <div className="w-hero__stat-icon"><CheckCircle size={16} /></div>
+                <div className="w-hero__stat-body">
+                  <span className="w-hero__stat-val">{countResolvedToday()}</span>
+                  <span className="w-hero__stat-lbl">Resolved today</span>
                 </div>
-                <div className="w-hero__chip w-hero__chip--blue">
-                  <KeyRound size={14} />
-                  <span>{roomRequestCount}</span>
-                  <small>Requests</small>
+              </div>
+              <div className="w-hero__stat w-hero__stat--blue" onClick={() => navigate("/warden/room-requests")}>
+                <div className="w-hero__stat-icon"><KeyRound size={16} /></div>
+                <div className="w-hero__stat-body">
+                  <span className="w-hero__stat-val">{roomRequestCount}</span>
+                  <span className="w-hero__stat-lbl">Room requests</span>
                 </div>
               </div>
             </div>
@@ -330,7 +340,7 @@ export default function Dashboard() {
               <span>
                 <strong>{stats.complaints.pending} complaint{stats.complaints.pending > 1 ? "s" : ""}</strong> waiting for your review
               </span>
-              <div className="w-alert__cta">Review <ArrowRight size={13} /></div>
+              <div className="w-alert__cta">Review now <ArrowRight size={13} /></div>
             </div>
           )}
           {roomRequestCount > 0 && (
@@ -343,169 +353,219 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* ══ METRIC GRID ══ */}
-          <section className="w-metrics">
-            <MetricCard
+          {/* ══ STAT CARDS ══ */}
+          <section className="w-stats-grid">
+            <WStatCard
               label="Total Rooms"
               value={totalRooms}
               sub={`Floor ${user.floor}`}
-              icon={<Building2 size={16} />}
+              icon={<Building2 size={18} />}
               color="blue"
             />
-            <MetricCard
+            <WStatCard
               label="Occupied"
               value={occupiedRooms}
               sub={`${occupancyPct}% occupancy`}
-              icon={<BedDouble size={16} />}
+              icon={<BedDouble size={18} />}
               color="violet"
-              bar={occupancyPct}
+              progress={occupancyPct}
             />
-            <MetricCard
+            <WStatCard
               label="Vacant"
               value={vacantRooms}
               sub="Available now"
-              icon={<DoorOpen size={16} />}
+              icon={<DoorOpen size={18} />}
               color="emerald"
             />
-            <MetricCard
+            <WStatCard
               label="Residents"
               value={totalStudents}
               sub="Active students"
-              icon={<Users size={16} />}
+              icon={<Users size={18} />}
               color="cyan"
             />
-            <MetricCard
+            <WStatCard
               label="Open Issues"
               value={stats.complaints.pending}
               sub={`${resolutionRate}% resolved`}
-              icon={<AlertCircle size={16} />}
+              icon={<AlertCircle size={18} />}
               color="amber"
-              bar={resolutionRate}
-              barColor="amber"
+              progress={resolutionRate}
+              progressColor="amber"
             />
-            <MetricCard
+            <WStatCard
               label="Room Requests"
               value={roomRequestCount}
               sub="Need approval"
-              icon={<KeyRound size={16} />}
+              icon={<KeyRound size={18} />}
               color="rose"
             />
           </section>
 
-          {/* ══ ANALYTICS + ACTIONS ROW ══ */}
-          <div className="w-body-grid">
+          {/* ══ MAIN CONTENT GRID ══ */}
+          <div className="w-content-grid">
 
-            {/* Occupancy Arc Panel */}
-            <div className="w-panel w-panel--occupancy">
-              <div className="w-panel__head">
-                <span className="w-panel__title">Occupancy</span>
-                <span className="w-panel__badge w-panel__badge--blue">Floor {user.floor}</span>
-              </div>
-              <div className="w-arc-wrap">
-                <OccupancyArc pct={occupancyPct} occupied={occupiedRooms} total={totalRooms} />
-              </div>
-              <div className="w-occ-legend">
-                <div className="w-occ-legend__item">
-                  <span className="w-occ-legend__dot w-occ-legend__dot--blue" />
-                  <span>Occupied <strong>{occupiedRooms}</strong></span>
+            {/* LEFT COL — Occupancy + Quick Actions */}
+            <div className="w-col-left">
+
+              {/* Occupancy Card */}
+              <div className="w-card">
+                <div className="w-card__head">
+                  <div className="w-card__title-group">
+                    <span className="w-card__title">Occupancy</span>
+                    <span className="w-card__badge w-card__badge--blue">Floor {user.floor}</span>
+                  </div>
                 </div>
-                <div className="w-occ-legend__item">
-                  <span className="w-occ-legend__dot w-occ-legend__dot--muted" />
-                  <span>Vacant <strong>{vacantRooms}</strong></span>
+                <div className="w-occ-visual">
+                  <WOccupancyRing pct={occupancyPct} occupied={occupiedRooms} total={totalRooms} />
+                  <div className="w-occ-rows">
+                    <div className="w-occ-row">
+                      <span className="w-occ-dot w-occ-dot--blue" />
+                      <span className="w-occ-row__label">Occupied</span>
+                      <span className="w-occ-row__val">{occupiedRooms}</span>
+                    </div>
+                    <div className="w-occ-row">
+                      <span className="w-occ-dot w-occ-dot--muted" />
+                      <span className="w-occ-row__label">Vacant</span>
+                      <span className="w-occ-row__val">{vacantRooms}</span>
+                    </div>
+                    <div className="w-occ-row">
+                      <span className="w-occ-dot w-occ-dot--violet" />
+                      <span className="w-occ-row__label">Total</span>
+                      <span className="w-occ-row__val">{totalRooms}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions Card */}
+              <div className="w-card">
+                <div className="w-card__head">
+                  <div className="w-card__title-group">
+                    <span className="w-card__title">Quick Actions</span>
+                  </div>
+                </div>
+                <div className="w-actions">
+                  <button className="w-action w-action--amber" onClick={() => navigate("/warden/complaints")}>
+                    <div className="w-action__icon"><AlertCircle size={15} /></div>
+                    <div className="w-action__body">
+                      <span>Complaints</span>
+                      {stats.complaints.pending > 0 && <em>{stats.complaints.pending} pending</em>}
+                    </div>
+                    <ArrowRight size={14} className="w-action__arrow" />
+                  </button>
+                  <button className="w-action w-action--emerald" onClick={() => navigate("/warden/meals")}>
+                    <div className="w-action__icon"><Utensils size={15} /></div>
+                    <div className="w-action__body">
+                      <span>Meal Management</span>
+                      <em>Update today's menu</em>
+                    </div>
+                    <ArrowRight size={14} className="w-action__arrow" />
+                  </button>
+                  <button className="w-action w-action--blue" onClick={() => navigate("/warden/room-requests")}>
+                    <div className="w-action__icon"><KeyRound size={15} /></div>
+                    <div className="w-action__body">
+                      <span>Room Requests</span>
+                      {roomRequestCount > 0 && <em>{roomRequestCount} pending</em>}
+                    </div>
+                    <ArrowRight size={14} className="w-action__arrow" />
+                  </button>
+                  <button className="w-action w-action--violet" onClick={() => setStudentsOpen(v => !v)}>
+                    <div className="w-action__icon"><Users size={15} /></div>
+                    <div className="w-action__body">
+                      <span>Student Roster</span>
+                      <em>{totalStudents} students on floor {user.floor}</em>
+                    </div>
+                    {studentsOpen
+                      ? <ChevronUp size={14} className="w-action__arrow" />
+                      : <ArrowRight size={14} className="w-action__arrow" />}
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Complaint Status Panel */}
-            <div className="w-panel w-panel--complaints">
-              <div className="w-panel__head">
-                <span className="w-panel__title">Complaints</span>
-                <span className="w-panel__badge w-panel__badge--amber">{stats.complaints.pending} open</span>
-              </div>
-              <div className="w-complaint-visual">
-                <div className="w-complaint-bar-wrap">
-                  <div className="w-complaint-bar-label">
-                    <span>Pending</span>
-                    <strong>{stats.complaints.pending}</strong>
+            {/* RIGHT COL — Complaints */}
+            <div className="w-col-right">
+              <div className="w-card w-card--full">
+                <div className="w-card__head">
+                  <div className="w-card__title-group">
+                    <span className="w-card__title">Complaint Overview</span>
+                    <span className={`w-card__badge ${stats.complaints.pending > 0 ? "w-card__badge--amber" : "w-card__badge--emerald"}`}>
+                      {stats.complaints.pending > 0 ? `${stats.complaints.pending} open` : "All clear"}
+                    </span>
                   </div>
-                  <div className="w-complaint-track">
-                    <div
-                      className="w-complaint-fill w-complaint-fill--amber"
-                      style={{ width: `${(stats.complaints.pending + stats.complaints.resolved) > 0 ? Math.round((stats.complaints.pending / (stats.complaints.pending + stats.complaints.resolved)) * 100) : 0}%` }}
-                    />
-                  </div>
+                  <button className="w-card__link" onClick={() => navigate("/warden/complaints")}>
+                    View all <ArrowRight size={12} />
+                  </button>
                 </div>
-                <div className="w-complaint-bar-wrap">
-                  <div className="w-complaint-bar-label">
-                    <span>Resolved</span>
-                    <strong>{stats.complaints.resolved}</strong>
-                  </div>
-                  <div className="w-complaint-track">
-                    <div
-                      className="w-complaint-fill w-complaint-fill--green"
-                      style={{ width: `${resolutionRate}%` }}
-                    />
-                  </div>
-                </div>
-                <div className="w-complaint-bar-wrap">
-                  <div className="w-complaint-bar-label">
-                    <span>Resolved Today</span>
-                    <strong>{countResolvedToday()}</strong>
-                  </div>
-                  <div className="w-complaint-track">
-                    <div
-                      className="w-complaint-fill w-complaint-fill--blue"
-                      style={{ width: `${stats.complaints.resolved > 0 ? Math.min(100, Math.round((countResolvedToday() / stats.complaints.resolved) * 100)) : 0}%` }}
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="w-resolution-rate">
-                <span>Resolution Rate</span>
-                <strong className={resolutionRate >= 70 ? "rate--good" : resolutionRate >= 40 ? "rate--mid" : "rate--low"}>
-                  {resolutionRate}%
-                </strong>
-              </div>
-            </div>
 
-            {/* Quick Actions Panel */}
-            <div className="w-panel w-panel--actions">
-              <div className="w-panel__head">
-                <span className="w-panel__title">Quick Actions</span>
-              </div>
-              <div className="w-action-list">
-                <button className="w-action-item w-action-item--amber" onClick={() => navigate("/warden/complaints")}>
-                  <div className="w-action-item__icon"><AlertCircle size={16} /></div>
-                  <div className="w-action-item__body">
-                    <span>Complaints</span>
-                    {stats.complaints.pending > 0 && <em>{stats.complaints.pending} pending</em>}
+                {/* Summary tiles */}
+                <div className="w-complaint-tiles">
+                  <div className="w-ctile w-ctile--amber">
+                    <span className="w-ctile__val">{stats.complaints.pending}</span>
+                    <span className="w-ctile__lbl">Pending</span>
                   </div>
-                  <ArrowRight size={14} className="w-action-item__arrow" />
-                </button>
-                <button className="w-action-item w-action-item--green" onClick={() => navigate("/warden/meals")}>
-                  <div className="w-action-item__icon"><Utensils size={16} /></div>
-                  <div className="w-action-item__body">
-                    <span>Meal Management</span>
-                    <em>Update today's menu</em>
+                  <div className="w-ctile w-ctile--emerald">
+                    <span className="w-ctile__val">{stats.complaints.resolved}</span>
+                    <span className="w-ctile__lbl">Resolved</span>
                   </div>
-                  <ArrowRight size={14} className="w-action-item__arrow" />
-                </button>
-                <button className="w-action-item w-action-item--blue" onClick={() => navigate("/warden/room-requests")}>
-                  <div className="w-action-item__icon"><KeyRound size={16} /></div>
-                  <div className="w-action-item__body">
-                    <span>Room Requests</span>
-                    {roomRequestCount > 0 && <em>{roomRequestCount} pending</em>}
+                  <div className="w-ctile w-ctile--blue">
+                    <span className="w-ctile__val">{countResolvedToday()}</span>
+                    <span className="w-ctile__lbl">Today</span>
                   </div>
-                  <ArrowRight size={14} className="w-action-item__arrow" />
-                </button>
-                <button className="w-action-item w-action-item--violet" onClick={() => setStudentsOpen(v => !v)}>
-                  <div className="w-action-item__icon"><Users size={16} /></div>
-                  <div className="w-action-item__body">
-                    <span>Student Roster</span>
-                    <em>{totalStudents} on floor {user.floor}</em>
+                  <div className="w-ctile w-ctile--violet">
+                    <span className="w-ctile__val">{totalComplaints}</span>
+                    <span className="w-ctile__lbl">Total</span>
                   </div>
-                  {studentsOpen ? <ChevronUp size={14} className="w-action-item__arrow" /> : <ArrowRight size={14} className="w-action-item__arrow" />}
-                </button>
+                </div>
+
+                {/* Progress bars */}
+                <div className="w-bars">
+                  <div className="w-bar-row">
+                    <div className="w-bar-meta">
+                      <span>Pending</span>
+                      <strong>{totalComplaints > 0 ? Math.round((stats.complaints.pending / totalComplaints) * 100) : 0}%</strong>
+                    </div>
+                    <div className="w-bar-track">
+                      <div
+                        className="w-bar-fill w-bar-fill--amber"
+                        style={{ width: `${totalComplaints > 0 ? Math.round((stats.complaints.pending / totalComplaints) * 100) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-bar-row">
+                    <div className="w-bar-meta">
+                      <span>Resolved</span>
+                      <strong>{resolutionRate}%</strong>
+                    </div>
+                    <div className="w-bar-track">
+                      <div className="w-bar-fill w-bar-fill--emerald" style={{ width: `${resolutionRate}%` }} />
+                    </div>
+                  </div>
+                  <div className="w-bar-row">
+                    <div className="w-bar-meta">
+                      <span>Resolved today</span>
+                      <strong>{stats.complaints.resolved > 0 ? Math.min(100, Math.round((countResolvedToday() / stats.complaints.resolved) * 100)) : 0}%</strong>
+                    </div>
+                    <div className="w-bar-track">
+                      <div
+                        className="w-bar-fill w-bar-fill--blue"
+                        style={{ width: `${stats.complaints.resolved > 0 ? Math.min(100, Math.round((countResolvedToday() / stats.complaints.resolved) * 100)) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Resolution rate footer */}
+                <div className="w-rate-footer">
+                  <div className="w-rate-footer__left">
+                    <span className="w-rate-footer__label">Overall Resolution Rate</span>
+                    <span className="w-rate-footer__sub">{totalComplaints} total complaints</span>
+                  </div>
+                  <div className={`w-rate-badge ${resolutionRate >= 70 ? "w-rate-badge--good" : resolutionRate >= 40 ? "w-rate-badge--mid" : "w-rate-badge--low"}`}>
+                    {resolutionRate}%
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -514,9 +574,15 @@ export default function Dashboard() {
           {studentsOpen && (
             <section className="w-students-panel">
               <div className="w-students-panel__header">
-                <div>
-                  <h2>Students · Floor {user.floor}</h2>
-                  <p>{filteredStudents.length} of {totalStudents} students{searchTerm && ` matching "${searchTerm}"`}</p>
+                <div className="w-students-panel__title-wrap">
+                  <h2 className="w-students-panel__title">
+                    <Users size={16} />
+                    Students · Floor {user.floor}
+                  </h2>
+                  <p className="w-students-panel__sub">
+                    {filteredStudents.length} of {totalStudents} students
+                    {searchTerm && ` matching "${searchTerm}"`}
+                  </p>
                 </div>
                 <div className="w-students-panel__controls">
                   <div className="w-search">
@@ -528,11 +594,13 @@ export default function Dashboard() {
                       onChange={(e) => setSearchTerm(e.target.value)}
                     />
                     {searchTerm && (
-                      <button onClick={() => setSearchTerm("")}><X size={12} /></button>
+                      <button className="w-search__clear" onClick={() => setSearchTerm("")}>
+                        <X size={12} />
+                      </button>
                     )}
                   </div>
                   <button className="w-close-btn" onClick={() => { setStudentsOpen(false); setSearchTerm(""); }}>
-                    <X size={14} /> Close
+                    <X size={13} /> Close
                   </button>
                 </div>
               </div>
@@ -543,7 +611,7 @@ export default function Dashboard() {
                     <tr>
                       <th><span><Users size={11} /> Student</span></th>
                       <th><span><Phone size={11} /> Phone</span></th>
-                      <th><span><GraduationCap size={11} /> Branch</span></th>
+                      {/* <th><span><GraduationCap size={11} /> Branch</span></th> */}
                       <th><span><Hash size={11} /> Room</span></th>
                       <th><span><Shield size={11} /> Status</span></th>
                     </tr>
@@ -571,7 +639,7 @@ export default function Dashboard() {
                             </div>
                           </td>
                           <td><span className="w-mono">{student.phone || student.phoneNumber || "—"}</span></td>
-                          <td><span className="w-branch-tag">{student.branch || student.department || "—"}</span></td>
+                          {/* <td><span className="w-branch-tag">{student.branch || student.department || "—"}</span></td> */}
                           <td><span className="w-room-tag">{student.roomNumber || "—"}</span></td>
                           <td>
                             <span className={`w-status-badge ${student.status === "active" ? "w-status-badge--green" : "w-status-badge--red"}`}>
@@ -587,6 +655,7 @@ export default function Dashboard() {
               </div>
             </section>
           )}
+
         </main>
       </div>
     );
@@ -676,24 +745,24 @@ export default function Dashboard() {
   return null;
 }
 
-/* ══════════════════════════════════════════════════
+/* ════════════════════════════════════════════════
    WARDEN — NEW COMPONENTS
-══════════════════════════════════════════════════ */
+════════════════════════════════════════════════ */
 
-function MetricCard({ label, value, sub, icon, color, bar, barColor }) {
+function WStatCard({ label, value, sub, icon, color, progress, progressColor }) {
   return (
-    <div className={`w-metric w-metric--${color}`}>
-      <div className="w-metric__top">
-        <div className={`w-metric__icon w-metric__icon--${color}`}>{icon}</div>
+    <div className={`w-scard w-scard--${color}`}>
+      <div className="w-scard__top">
+        <div className={`w-scard__icon w-scard__icon--${color}`}>{icon}</div>
+        <span className="w-scard__value">{value}</span>
       </div>
-      <div className="w-metric__value">{value}</div>
-      <div className="w-metric__label">{label}</div>
-      <div className="w-metric__sub">{sub}</div>
-      {bar !== undefined && (
-        <div className="w-metric__bar-track">
+      <div className="w-scard__label">{label}</div>
+      <div className="w-scard__sub">{sub}</div>
+      {progress !== undefined && (
+        <div className="w-scard__bar-track">
           <div
-            className={`w-metric__bar-fill w-metric__bar-fill--${barColor || color}`}
-            style={{ width: `${Math.min(bar, 100)}%` }}
+            className={`w-scard__bar-fill w-scard__bar-fill--${progressColor || color}`}
+            style={{ width: `${Math.min(progress, 100)}%` }}
           />
         </div>
       )}
@@ -701,34 +770,34 @@ function MetricCard({ label, value, sub, icon, color, bar, barColor }) {
   );
 }
 
-function OccupancyArc({ pct, occupied, total }) {
-  const r = 54;
+function WOccupancyRing({ pct, occupied, total }) {
+  const r = 48;
   const circ = 2 * Math.PI * r;
-  const dashOffset = circ - (circ * Math.min(pct, 100)) / 100;
+  const offset = circ - (circ * Math.min(pct, 100)) / 100;
 
   return (
-    <div className="w-arc">
-      <svg viewBox="0 0 128 128" className="w-arc__svg">
-        <circle cx="64" cy="64" r={r} className="w-arc__track" />
+    <div className="w-ring">
+      <svg viewBox="0 0 112 112" className="w-ring__svg">
+        <circle cx="56" cy="56" r={r} className="w-ring__track" />
         <circle
-          cx="64" cy="64" r={r}
-          className="w-arc__fill"
+          cx="56" cy="56" r={r}
+          className="w-ring__fill"
           strokeDasharray={circ}
-          strokeDashoffset={dashOffset}
-          transform="rotate(-90 64 64)"
+          strokeDashoffset={offset}
+          transform="rotate(-90 56 56)"
         />
       </svg>
-      <div className="w-arc__center">
-        <span className="w-arc__pct">{pct}%</span>
-        <span className="w-arc__meta">{occupied}/{total}</span>
+      <div className="w-ring__center">
+        <span className="w-ring__pct">{pct}%</span>
+        <span className="w-ring__meta">{occupied}/{total}</span>
       </div>
     </div>
   );
 }
 
-/* ══════════════════════════════════════════════════
-   SHARED COMPONENTS (unchanged)
-══════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════
+   SHARED COMPONENTS (Admin + Student — unchanged)
+════════════════════════════════════════════════ */
 
 function KpiCard({ label, value, icon, accent, sub }) {
   return (

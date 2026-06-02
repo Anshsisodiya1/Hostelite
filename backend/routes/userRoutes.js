@@ -1,46 +1,103 @@
 const express = require("express");
+
 const {
   getMyProfile,
   getAllUsers,
   updateUser,
   deleteUser,
   getUserByIdWithProfile,
-} = require("../controllers/userController"); 
+  getDashboardContacts,
+} = require("../controllers/userController");
+
 const { authMiddleware } = require("../middleware/authMiddleware");
 const roleMiddleware = require("../middleware/roleMiddleware");
 
-
-
 const router = express.Router();
 
+/* =========================================================
+   USER PROFILE
+   ========================================================= */
 
 // Get logged-in user's profile
 router.get("/me", authMiddleware, getMyProfile);
 
-// Get all users (admin only)
-router.get("/", authMiddleware, roleMiddleware(["admin"]), getAllUsers);
+/* =========================================================
+   DASHBOARD CONTACTS
+   Student -> Admin + Assigned Warden
+   Warden  -> Admin Only
+   ========================================================= */
 
-// Get single user by ID with profile (admin only)
-router.get("/:id/profile", authMiddleware, roleMiddleware(["admin"]), getUserByIdWithProfile);
+router.get(
+  "/dashboard-contacts",
+  authMiddleware,
+  getDashboardContacts
+);
 
-// Update user details (admin only)
-router.put("/:id", authMiddleware, roleMiddleware(["admin"]), updateUser);
+/* =========================================================
+   ADMIN ONLY ROUTES
+   ========================================================= */
 
+// Get all users
+router.get(
+  "/",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  getAllUsers
+);
 
-// Delete user (admin only)
-router.delete("/:id", authMiddleware, roleMiddleware(["admin"]), deleteUser);
+// Get counts of admins and wardens
+router.get(
+  "/role-counts",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  async (req, res) => {
+    try {
+      const User = require("../models/User");
 
-// Get counts of admins and wardens (admin only)
-router.get("/role-counts", authMiddleware, roleMiddleware(["admin"]), async (req, res) => {
-  try {
-    const adminCount = await require("../models/User").countDocuments({ role: "admin" });
-    const wardenCount = await require("../models/User").countDocuments({ role: "warden" });
+      const adminCount = await User.countDocuments({
+        role: "admin",
+      });
 
-    res.json({ adminCount, wardenCount });
-  } catch (err) {
-    res.status(500).json({ message: "Failed to fetch role counts" });
+      const wardenCount = await User.countDocuments({
+        role: "warden",
+      });
+
+      res.status(200).json({
+        adminCount,
+        wardenCount,
+      });
+    } catch (err) {
+      console.error("Role Count Error:", err);
+
+      res.status(500).json({
+        message: "Failed to fetch role counts",
+      });
+    }
   }
-});
+);
 
+// Get single user profile by ID
+router.get(
+  "/:id/profile",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  getUserByIdWithProfile
+);
+
+// Update user
+router.put(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  updateUser
+);
+
+// Delete user
+router.delete(
+  "/:id",
+  authMiddleware,
+  roleMiddleware(["admin"]),
+  deleteUser
+);
 
 module.exports = router;

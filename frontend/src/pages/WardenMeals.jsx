@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../services/api";
 import "../styles/wardenMeals.css";
 import {
   ArrowLeft, Utensils, Coffee, Sun, Moon,
   CheckCircle, AlertCircle, Save, Check, Clock,
-  Mail, Pencil, RefreshCw, CalendarDays,
+  Mail, Pencil, RefreshCw, CalendarDays, Loader2,
 } from "lucide-react";
 
 /* ── Meal metadata ── */
@@ -54,26 +54,59 @@ const EMPTY_MEALS = { breakfast: "", lunch: "", dinner: "" };
 const WardenMeals = () => {
   const navigate = useNavigate();
 
-  /* form values */
-  const [meals, setMeals]           = useState(EMPTY_MEALS);
-  /* what's actually saved — drives the "view" card */
+  const [meals,      setMeals]      = useState(EMPTY_MEALS);
   const [savedMeals, setSavedMeals] = useState(null);
-  /* true = show view card, false = show form */
-  const [viewMode, setViewMode]     = useState(false);
+  const [viewMode,   setViewMode]   = useState(false);
 
-  const [time, setTime]   = useState(new Date());
-  const [today, setToday] = useState(getTodayDate());
+  // NEW: loading state while fetching today's meal from backend
+  const [fetching, setFetching] = useState(true);
+
+  const [time,   setTime]   = useState(new Date());
+  const [today,  setToday]  = useState(getTodayDate());
   const [saving, setSaving] = useState(false);
-  const [error, setError]   = useState("");
+  const [error,  setError]  = useState("");
+
+  /* ── Fetch today's meal from backend on mount ──
+     If a meal already exists for today (set by any warden),
+     jump straight to view mode instead of showing the blank form.
+  ── */
+  const fetchTodayMeal = useCallback(async () => {
+    try {
+      setFetching(true);
+      const res = await API.get("/meals/today");
+      // Expecting: { breakfast: "...", lunch: "...", dinner: "..." }
+      // or null / 404 if no meal set yet today
+      if (res.data && (res.data.breakfast || res.data.lunch || res.data.dinner)) {
+        setSavedMeals(res.data);
+        setViewMode(true);
+      } else {
+        // No meal today — show the form
+        setSavedMeals(null);
+        setViewMode(false);
+      }
+    } catch (err) {
+      // 404 means no meal today — show the form
+      if (err.response?.status === 404) {
+        setSavedMeals(null);
+        setViewMode(false);
+      }
+      // Any other error: silently fall back to form
+    } finally {
+      setFetching(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchTodayMeal();
+  }, [fetchTodayMeal]);
 
   /* ── Live clock + midnight auto-reset ── */
   useEffect(() => {
     const timer = setInterval(() => {
-      const now = new Date();
+      const now     = new Date();
       setTime(now);
       const newDate = getTodayDate();
       if (newDate !== today) {
-        /* New day → wipe everything, show the form again */
         setToday(newDate);
         setMeals(EMPTY_MEALS);
         setSavedMeals(null);
@@ -99,7 +132,6 @@ const WardenMeals = () => {
       setSaving(true);
       setError("");
       await API.post("/meals", meals);
-      /* Snapshot what was saved, switch to view mode */
       setSavedMeals({ ...meals });
       setViewMode(true);
     } catch {
@@ -109,16 +141,16 @@ const WardenMeals = () => {
     }
   };
 
-  /* Edit button → pre-fill form with saved values */
+  /* Edit: pre-fill form with current saved values */
   const handleEdit = () => {
-    setMeals({ ...savedMeals });
+    setMeals(savedMeals ? { ...savedMeals } : EMPTY_MEALS);
     setViewMode(false);
     setError("");
   };
 
   const filledCount = Object.values(meals).filter((v) => v.trim()).length;
 
-  /* ── Shared header (same in both modes) ── */
+  /* ── Shared header ── */
   const Header = () => (
     <div className="wm-header">
       <button className="wm-back" onClick={() => navigate(-1)}>
@@ -153,7 +185,7 @@ const WardenMeals = () => {
     </div>
   );
 
-  /* ── Date strip (same in both modes) ── */
+  /* ── Date strip ── */
   const DateStrip = () => (
     <div className="wm-date-strip">
       <CalendarDays size={15} strokeWidth={2} className="wm-date-icon" />
@@ -179,8 +211,22 @@ const WardenMeals = () => {
     </div>
   );
 
+  /* ── Full-page skeleton while fetching ── */
+  if (fetching) {
+    return (
+      <div className="wm-root">
+        <div className="wm-fetch-loader">
+          <div className="wm-fetch-spinner">
+            <Loader2 size={28} strokeWidth={2} />
+          </div>
+          <p>Loading today's meal plan…</p>
+        </div>
+      </div>
+    );
+  }
+
   /* ════════════════════════════════════════
-     VIEW MODE — show what was saved
+     VIEW MODE
   ════════════════════════════════════════ */
   if (viewMode && savedMeals) {
     return (
@@ -188,24 +234,22 @@ const WardenMeals = () => {
         <Header />
         <DateStrip />
 
-        {/* Success banner */}
         <div className="wm-success-banner">
           <div className="wm-success-banner__icon">
             <Mail size={18} strokeWidth={1.8} />
           </div>
           <div>
-            <div className="wm-success-banner__title">Meal plan saved & students notified</div>
+            <div className="wm-success-banner__title">Meal plan saved &amp; students notified</div>
             <div className="wm-success-banner__sub">
               Email notifications were sent to all registered students.
             </div>
           </div>
         </div>
 
-        {/* Saved meal view cards */}
         <div className="wm-meals">
           {MEAL_CONFIG.map((meal, i) => {
             const { Icon, accent } = meal;
-            const value = savedMeals[meal.name];
+            const value = savedMeals[meal.name] || "";
             return (
               <div
                 key={meal.name}
@@ -229,7 +273,6 @@ const WardenMeals = () => {
           })}
         </div>
 
-        {/* Edit button */}
         <button className="wm-edit-btn" onClick={handleEdit}>
           <Pencil size={15} strokeWidth={2} />
           Edit Meal Plan
@@ -244,12 +287,11 @@ const WardenMeals = () => {
   }
 
   /* ════════════════════════════════════════
-     FORM MODE — fill / update meals
+     FORM MODE
   ════════════════════════════════════════ */
   return (
     <div className="wm-root">
 
-      {/* Full-screen overlay loader */}
       {saving && (
         <div className="wm-overlay">
           <div className="wm-overlay-card">
@@ -259,7 +301,7 @@ const WardenMeals = () => {
             <div className="wm-overlay-icon">
               <Mail size={26} strokeWidth={1.5} />
             </div>
-            <h3>Saving & Notifying Students</h3>
+            <h3>Saving &amp; Notifying Students</h3>
             <p>
               Sending meal update emails to all students.
               <br />
@@ -280,7 +322,6 @@ const WardenMeals = () => {
       <Header />
       <DateStrip />
 
-      {/* Meal input cards */}
       <div className="wm-meals">
         {MEAL_CONFIG.map((meal, i) => {
           const { Icon, accent } = meal;
@@ -319,7 +360,6 @@ const WardenMeals = () => {
         })}
       </div>
 
-      {/* Error */}
       {error && (
         <div className="wm-error">
           <AlertCircle size={15} strokeWidth={2} />
@@ -327,7 +367,6 @@ const WardenMeals = () => {
         </div>
       )}
 
-      {/* Save button */}
       <button
         className={`wm-save-btn ${saving ? "wm-save-btn--loading" : ""}`}
         onClick={handleSave}
@@ -336,7 +375,7 @@ const WardenMeals = () => {
         {saving ? (
           <>
             <span className="wm-spinner" />
-            Saving & Sending Emails…
+            Saving &amp; Sending Emails…
           </>
         ) : (
           <>

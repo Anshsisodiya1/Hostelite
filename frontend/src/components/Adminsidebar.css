@@ -3,6 +3,7 @@
    KEY FIX: sidebar is position:fixed — page scrolls, sidebar doesn't
    Two themes: Light (default) ↔ Dark (.asb--dark)
    All selectors prefixed .asb — zero global bleed
+   Mobile: hamburger + overlay drawer pattern
    ================================================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
@@ -79,16 +80,13 @@
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SHELL — FIXED POSITION (core fix)
-   The sidebar never moves when the page scrolls.
-   .asb-layout__content gets a left margin equal to the sidebar width.
+   SHELL — FIXED POSITION
 ══════════════════════════════════════════════════════════════ */
 .asb {
   font-family:    var(--sb-font);
   background:     var(--sb-bg);
   border-right:   1px solid var(--sb-border);
 
-  /* ✅ FIXED — stays in place while page scrolls */
   position:       fixed;
   top:            0;
   left:           0;
@@ -97,7 +95,7 @@
 
   display:        flex;
   flex-direction: column;
-  overflow:       visible;          /* allow popover to overflow */
+  overflow:       visible;
 
   -webkit-font-smoothing: antialiased;
 
@@ -109,6 +107,75 @@
 
 .asb--expanded  { width: var(--sb-w);    }
 .asb--collapsed { width: var(--sb-w-sm); }
+
+/* ══════════════════════════════════════════════════════════════
+   HAMBURGER BUTTON — mobile only
+══════════════════════════════════════════════════════════════ */
+.asb-hamburger {
+  display:         none; /* hidden on desktop */
+  flex-direction:  column;
+  justify-content: center;
+  gap:             5px;
+  position:        fixed;
+  top:             14px;
+  left:            14px;
+  z-index:         300;
+  width:           40px;
+  height:          40px;
+  background:      #ffffff;
+  border:          1px solid #e4e7f0;
+  border-radius:   8px;
+  padding:         0;
+  cursor:          pointer;
+  align-items:     center;
+  box-shadow:      0 1px 4px rgba(15,23,42,0.10);
+  transition:      background 0.2s, border-color 0.2s;
+}
+
+/* Dark variant for the hamburger */
+.asb-hamburger--dark {
+  background:   #16181f;
+  border-color: rgba(255,255,255,0.12);
+}
+
+.asb-hamburger span {
+  display:       block;
+  width:         18px;
+  height:        2px;
+  background:    #334155;
+  border-radius: 2px;
+  transition:    transform 0.22s cubic-bezier(0.4,0,0.2,1),
+                 opacity   0.22s cubic-bezier(0.4,0,0.2,1);
+}
+
+.asb-hamburger--dark span {
+  background: #a0a8be;
+}
+
+/* Hide hamburger entirely when sidebar is open */
+.asb-hamburger--open {
+  opacity:        0;
+  pointer-events: none;
+  transform:      scale(0.8);
+  transition:     opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OVERLAY — mobile only, behind sidebar, above content
+══════════════════════════════════════════════════════════════ */
+.asb-overlay {
+  display:    none; /* hidden on desktop */
+  position:   fixed;
+  inset:      0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index:    199;
+  animation:  sb-overlay-in 0.2s ease both;
+}
+
+@keyframes sb-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
 
 /* ══════════════════════════════════════════════════════════════
    TOP ROW — logo + collapse button
@@ -662,38 +729,122 @@
 
 /* ══════════════════════════════════════════════════════════════
    LAYOUT WRAPPER
-   Content area gets left margin = sidebar width so it never hides
-   under the fixed sidebar.
 ══════════════════════════════════════════════════════════════ */
 .asb-layout {
   display:    flex;
   min-height: 100vh;
 }
 
-/* Content shifts right by sidebar width */
 .asb-layout__content {
   flex:        1;
   min-width:   0;
-  margin-left: var(--sb-w);           /* expanded default */
+  margin-left: var(--sb-w);
   transition:  margin-left var(--sb-speed) var(--sb-ease);
   overflow-y:  auto;
 }
 
-/* When sidebar is collapsed, content shifts to narrower offset */
 .asb-layout--collapsed .asb-layout__content {
   margin-left: var(--sb-w-sm);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   MOBILE
+   MOBILE — max-width: 768px
+   Sidebar becomes an off-canvas drawer.
+   Hamburger and overlay become visible.
 ══════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
+
+  /* Show hamburger and overlay on mobile */
+  .asb-hamburger { display: flex; }
+  .asb-overlay   { display: block; }
+
+  /* Sidebar: always full-width, slide off to the left by default */
+  .asb,
+  .asb--expanded,
   .asb--collapsed {
-    transform: translateX(-100%);
+    width:      var(--sb-w) !important;
+    transform:  translateX(-100%);
+    transition:
+      transform    var(--sb-speed) var(--sb-ease),
+      background   0.3s            var(--sb-ease),
+      border-color 0.3s            var(--sb-ease);
+    box-shadow: none;
   }
 
+  /* Slide in when mobile-open */
+  .asb--mobile-open {
+    transform:  translateX(0) !important;
+    box-shadow: 4px 0 24px rgba(0,0,0,0.18);
+  }
+
+  /* On mobile the sidebar is always expanded (not collapsed icon-only) */
+  .asb--mobile-open .asb__logo-name,
+  .asb--mobile-open .asb__nav-label,
+  .asb--mobile-open .asb__profile-text,
+  .asb--mobile-open .asb__profile-chevron {
+    opacity:   1 !important;
+    transform: translateX(0) !important;
+    width:     auto !important;
+    flex:      1 !important;
+  }
+
+  .asb--mobile-open .asb__nav-btn {
+    justify-content: flex-start !important;
+    padding:         9px 10px !important;
+  }
+
+  .asb--mobile-open .asb__profile-btn {
+    justify-content: flex-start !important;
+    padding:         8px 10px !important;
+    background:      var(--sb-bg-2) !important;
+    border-color:    var(--sb-border) !important;
+  }
+
+  .asb--mobile-open .asb__top {
+    flex-direction: row !important;
+    align-items:    center !important;
+    gap:            8px !important;
+    padding:        16px 12px 14px !important;
+  }
+
+  .asb--mobile-open .asb__rule {
+    margin: 0 12px !important;
+  }
+
+  /* Full width content — no left margin, small top gap for hamburger */
   .asb-layout__content,
   .asb-layout--collapsed .asb-layout__content {
-    margin-left: 0 !important;
+    margin-left:  0 !important;
+    margin-right: 0 !important;
+    width:        100% !important;
+    max-width:    100% !important;
+    padding-top:  56px;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   GLOBAL MOBILE BODY FIX
+   In case the page root itself has a left offset or margin
+   from the sidebar, zero it out on mobile.
+══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  body {
+    margin-left:  0 !important;
+    padding-left: 0 !important;
+    overflow-x:   hidden;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MOBILE CLOSE vs DESKTOP TOGGLE visibility swap
+══════════════════════════════════════════════════════════════ */
+
+/* Desktop: hide the ✕ close, show the collapse toggle */
+.asb__mobile-close   { display: none; }
+.asb__desktop-toggle { display: block; }
+
+@media (max-width: 768px) {
+  /* Mobile: show ✕ close inside sidebar, hide the collapse toggle */
+  .asb__mobile-close   { display: flex; }
+  .asb__desktop-toggle { display: none; }
 }

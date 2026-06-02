@@ -56,7 +56,7 @@ const userSchema = new mongoose.Schema(
     deviceToken: String,
 
     /* =========================================================
-       🔐 2FA (NEW ADDITION)
+        2FA (NEW ADDITION)
        ========================================================= */
     twoFactorSecret: {
       type: String,

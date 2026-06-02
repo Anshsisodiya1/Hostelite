@@ -138,12 +138,52 @@ const saveToken = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { deviceToken: req.body.token },
-      { new: true }
+      { new: true },
     );
 
     res.json({ message: "Token saved", user });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// Get dashbaord Contacts
+
+const getDashboardContacts = async (req, res) => {
+  try {
+    const currentUser = req.user;
+
+    // Get Admin
+    const admin = await User.findOne({ role: "admin" }).select(
+      "-password -otp -otpExpires -twoFactorSecret",
+    );
+
+    let warden = null;
+
+    // If student, fetch assigned warden
+    if (currentUser.role === "student") {
+      const student = await User.findById(currentUser.id).populate("floor");
+
+      if (student?.floor) {
+        warden = await User.findOne({
+          role: "warden",
+          floor: student.floor._id,
+        }).select("-password -otp -otpExpires -twoFactorSecret");
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      admin,
+      warden,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch contacts",
+    });
   }
 };
 
@@ -154,4 +194,5 @@ module.exports = {
   deleteUser,
   getUserByIdWithProfile,
   saveToken,
+  getDashboardContacts,
 };

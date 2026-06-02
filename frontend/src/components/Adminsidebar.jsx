@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "./Adminsidebar.css";
 
-// ── Icons ──────────────────────────────────────────────────────
 const Icon = {
   Logo: () => (
     <svg viewBox="0 0 32 32" fill="none">
@@ -94,9 +93,15 @@ const Icon = {
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
     </svg>
   ),
+  // ✕ close icon — used inside sidebar on mobile
+  Close: () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+  ),
 };
 
-// ── Nav items ─────────────────────────────────────────────────
 const NAV = [
   { id: "dashboard", label: "Dashboard",      icon: Icon.Dashboard, path: "/dashboard" },
   { id: "users",     label: "Manage Users",   icon: Icon.Users,     path: "/admin/users" },
@@ -105,29 +110,17 @@ const NAV = [
   { id: "settings",  label: "System Settings", icon: Icon.Settings,  path: "/admin/system-settings" },
 ];
 
-// ── Read real admin info from JWT ─────────────────────────────
-// Your JWT payload must contain: name, email, role
-// These are set when the admin logs in on the backend (e.g. jwt.sign({ name, email, role }, secret))
 function getAdminInfo() {
   try {
     const token = localStorage.getItem("token");
     if (!token) return { name: "Admin", email: "admin@hostelite.com", role: "Admin" };
-
-    // Decode JWT middle segment (payload)
     const base64Payload = token.split(".")[1];
-    // Fix base64 padding if needed
     const padded = base64Payload.replace(/-/g, "+").replace(/_/g, "/");
-    const json   = decodeURIComponent(
-      atob(padded)
-        .split("")
-        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
-        .join("")
+    const json = decodeURIComponent(
+      atob(padded).split("").map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0")).join("")
     );
     const payload = JSON.parse(json);
-
     return {
-      // Use whatever field your backend puts in the token
-      // Common: payload.name / payload.user?.name / payload.username
       name:  payload.name  || payload.username || payload.user?.name  || "Admin",
       email: payload.email || payload.user?.email || "",
       role:  payload.role  || payload.user?.role  || "Admin",
@@ -138,16 +131,9 @@ function getAdminInfo() {
 }
 
 function getInitials(name = "") {
-  return name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase() || "A";
+  return name.trim().split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase() || "A";
 }
 
-// ── Component ─────────────────────────────────────────────────
 export default function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -156,12 +142,12 @@ export default function AdminSidebar() {
   const [dark,        setDark]        = useState(() => localStorage.getItem("sb_dark") === "true");
   const [profileOpen, setProfileOpen] = useState(false);
   const [tooltip,     setTooltip]     = useState(null);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
 
   const profileRef = useRef(null);
   const admin      = getAdminInfo();
   const initials   = getInitials(admin.name);
 
-  // Persist prefs
   useEffect(() => { localStorage.setItem("sb_collapsed", collapsed); }, [collapsed]);
   useEffect(() => { localStorage.setItem("sb_dark", dark); }, [dark]);
 
@@ -175,6 +161,18 @@ export default function AdminSidebar() {
     return () => document.removeEventListener("mousedown", h);
   }, []);
 
+  // Lock body scroll when mobile drawer is open
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [mobileOpen]);
+
+  const handleNavClick = (path) => {
+    navigate(path);
+    setMobileOpen(false);
+    setProfileOpen(false);
+  };
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/");
@@ -183,160 +181,173 @@ export default function AdminSidebar() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <aside className={`asb ${dark ? "asb--dark" : "asb--light"} ${collapsed ? "asb--collapsed" : "asb--expanded"}`}>
+    <>
+      {/* ─── HAMBURGER — mobile only, hides when sidebar is open ─── */}
+      <button
+        className={`asb-hamburger ${dark ? "asb-hamburger--dark" : ""} ${mobileOpen ? "asb-hamburger--open" : ""}`}
+        onClick={() => setMobileOpen(true)}
+        aria-label="Open menu"
+      >
+        <span /><span /><span />
+      </button>
 
-      {/* ─── TOP: logo + toggle ─── */}
-      <div className="asb__top">
-        <div className="asb__logo">
-          {/* <span className="asb__logo-icon"><Icon.Logo /></span> */}
-          <span className="asb__logo-name">Hostelite</span>
+      {/* ─── OVERLAY ─── */}
+      {mobileOpen && (
+        <div className="asb-overlay" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+      )}
+
+      {/* ─── SIDEBAR ─── */}
+      <aside
+        className={[
+          "asb",
+          dark ? "asb--dark" : "asb--light",
+          collapsed ? "asb--collapsed" : "asb--expanded",
+          mobileOpen ? "asb--mobile-open" : "",
+        ].join(" ")}
+      >
+
+        {/* ─── TOP: logo + close (mobile) / collapse (desktop) ─── */}
+        <div className="asb__top">
+          <div className="asb__logo">
+            <span className="asb__logo-name">Hostelite</span>
+          </div>
+
+          {/* On mobile: show ✕ close button. On desktop: show collapse toggle */}
+          <button
+            className="asb__collapse-btn asb__mobile-close"
+            onClick={() => setMobileOpen(false)}
+            aria-label="Close menu"
+          >
+            <Icon.Close />
+          </button>
+
+          <div
+            className="asb__tip-wrap asb__desktop-toggle"
+            onMouseEnter={() => setTooltip("__toggle")}
+            onMouseLeave={() => setTooltip(null)}
+          >
+            <button
+              className="asb__collapse-btn"
+              onClick={() => { setCollapsed((c) => !c); setTooltip(null); }}
+              aria-label="Toggle sidebar"
+            >
+              <Icon.PanelLeft />
+            </button>
+            {tooltip === "__toggle" && (
+              <span className="asb__tooltip">{collapsed ? "Expand" : "Collapse"}</span>
+            )}
+          </div>
         </div>
 
+        <div className="asb__rule" />
+
+        {!collapsed && <span className="asb__group-label">Main Menu</span>}
+
+        {/* ─── NAV ─── */}
+        <nav className="asb__nav">
+          {NAV.map((item) => {
+            const NavIcon = item.icon;
+            const active  = isActive(item.path);
+            return (
+              <div
+                key={item.id}
+                className="asb__tip-wrap"
+                onMouseEnter={() => collapsed && setTooltip(item.id)}
+                onMouseLeave={() => setTooltip(null)}
+              >
+                <button
+                  className={`asb__nav-btn ${active ? "asb__nav-btn--active" : ""}`}
+                  onClick={() => handleNavClick(item.path)}
+                >
+                  {active && <span className="asb__active-bar" />}
+                  <span className="asb__nav-icon"><NavIcon /></span>
+                  <span className="asb__nav-label">{item.label}</span>
+                </button>
+                {collapsed && tooltip === item.id && (
+                  <span className="asb__tooltip">{item.label}</span>
+                )}
+              </div>
+            );
+          })}
+        </nav>
+
+        <div className="asb__flex-gap" />
+        <div className="asb__rule" />
+
+        {/* ─── PROFILE ─── */}
         <div
-          className="asb__tip-wrap"
-          onMouseEnter={() => setTooltip("__toggle")}
-          onMouseLeave={() => setTooltip(null)}
+          className="asb__profile-wrap"
+          ref={profileRef}
+          onMouseEnter={() => collapsed && setTooltip("__profile")}
+          onMouseLeave={() => collapsed && setTooltip(null)}
         >
           <button
-            className="asb__collapse-btn"
-            onClick={() => { setCollapsed(c => !c); setTooltip(null); }}
-            aria-label="Toggle sidebar"
+            className={`asb__profile-btn ${profileOpen ? "asb__profile-btn--open" : ""}`}
+            onClick={() => setProfileOpen((o) => !o)}
+            aria-label="Profile menu"
           >
-            <Icon.PanelLeft />
-          </button>
-          {tooltip === "__toggle" && (
-            <span className="asb__tooltip">
-              {collapsed ? "Expand" : "Collapse"}
+            <span className="asb__avatar">{initials}</span>
+            <span className="asb__profile-text">
+              <span className="asb__profile-name">{admin.name}</span>
+              <span className="asb__profile-role">{admin.role}</span>
             </span>
+            <span className={`asb__profile-chevron ${profileOpen ? "asb__profile-chevron--up" : ""}`}>
+              <Icon.ChevronUp />
+            </span>
+          </button>
+
+          {collapsed && tooltip === "__profile" && (
+            <span className="asb__tooltip">{admin.name}</span>
           )}
-        </div>
-      </div>
 
-      <div className="asb__rule" />
+          {profileOpen && (
+            <div className="asb__popover">
+              <div className="asb__popover-head">
+                <span className="asb__popover-avatar">{initials}</span>
+                <div className="asb__popover-info">
+                  <span className="asb__popover-name">{admin.name}</span>
+                  <span className="asb__popover-email">
+                    <Icon.Email />
+                    <span>{admin.email || "No email found"}</span>
+                  </span>
+                </div>
+              </div>
 
-      {/* ─── NAV GROUP LABEL ─── */}
-      {!collapsed && <span className="asb__group-label">Main Menu</span>}
+              <div className="asb__popover-divider" />
 
-      {/* ─── NAV ITEMS ─── */}
-      <nav className="asb__nav">
-        {NAV.map((item) => {
-          const NavIcon = item.icon;
-          const active  = isActive(item.path);
-          return (
-            <div
-              key={item.id}
-              className="asb__tip-wrap"
-              onMouseEnter={() => collapsed && setTooltip(item.id)}
-              onMouseLeave={() => setTooltip(null)}
-            >
+              <div className="asb__popover-row asb__popover-row--meta">
+                <span className="asb__popover-row-icon"><Icon.Shield /></span>
+                <span className="asb__popover-row-text">Role</span>
+                <span className="asb__role-badge">{admin.role}</span>
+              </div>
+
+              <div className="asb__popover-divider" />
+
               <button
-                className={`asb__nav-btn ${active ? "asb__nav-btn--active" : ""}`}
-                onClick={() => navigate(item.path)}
+                className="asb__popover-row asb__popover-row--btn"
+                onClick={() => setDark((d) => !d)}
               >
-                {active && <span className="asb__active-bar" />}
-                <span className="asb__nav-icon"><NavIcon /></span>
-                <span className="asb__nav-label">{item.label}</span>
+                <span className="asb__popover-row-icon">{dark ? <Icon.Sun /> : <Icon.Moon />}</span>
+                <span className="asb__popover-row-text">{dark ? "Light Mode" : "Dark Mode"}</span>
+                <span className={`asb__theme-pill ${dark ? "asb__theme-pill--on" : ""}`}>
+                  <span className="asb__theme-pill-knob" />
+                </span>
               </button>
 
-              {collapsed && tooltip === item.id && (
-                <span className="asb__tooltip">{item.label}</span>
-              )}
+              <div className="asb__popover-divider" />
+
+              <button
+                className="asb__popover-row asb__popover-row--btn asb__popover-row--danger"
+                onClick={handleLogout}
+              >
+                <span className="asb__popover-row-icon"><Icon.Logout /></span>
+                <span className="asb__popover-row-text">Log out</span>
+              </button>
             </div>
-          );
-        })}
-      </nav>
+          )}
+        </div>
 
-      {/* ─── SPACER ─── */}
-      <div className="asb__flex-gap" />
-
-      <div className="asb__rule" />
-
-      {/* ─── PROFILE ─── */}
-      <div
-        className="asb__profile-wrap"
-        ref={profileRef}
-        onMouseEnter={() => collapsed && setTooltip("__profile")}
-        onMouseLeave={() => collapsed && setTooltip(null)}
-      >
-        <button
-          className={`asb__profile-btn ${profileOpen ? "asb__profile-btn--open" : ""}`}
-          onClick={() => setProfileOpen(o => !o)}
-          aria-label="Profile menu"
-        >
-          <span className="asb__avatar">{initials}</span>
-          <span className="asb__profile-text">
-            <span className="asb__profile-name">{admin.name}</span>
-            <span className="asb__profile-role">{admin.role}</span>
-          </span>
-          <span className={`asb__profile-chevron ${profileOpen ? "asb__profile-chevron--up" : ""}`}>
-            <Icon.ChevronUp />
-          </span>
-        </button>
-
-        {collapsed && tooltip === "__profile" && (
-          <span className="asb__tooltip">{admin.name}</span>
-        )}
-
-        {/* ── Popover ── */}
-        {profileOpen && (
-          <div className="asb__popover">
-
-            {/* Head */}
-            <div className="asb__popover-head">
-              <span className="asb__popover-avatar">{initials}</span>
-              <div className="asb__popover-info">
-                {/* Real name from JWT */}
-                <span className="asb__popover-name">{admin.name}</span>
-                {/* Real email from JWT */}
-                <span className="asb__popover-email">
-                  <Icon.Email />
-                  <span>{admin.email || "No email found"}</span>
-                </span>
-              </div>
-            </div>
-
-            <div className="asb__popover-divider" />
-
-            {/* Role */}
-            <div className="asb__popover-row asb__popover-row--meta">
-              <span className="asb__popover-row-icon"><Icon.Shield /></span>
-              <span className="asb__popover-row-text">Role</span>
-              <span className="asb__role-badge">{admin.role}</span>
-            </div>
-
-            <div className="asb__popover-divider" />
-
-            {/* Theme toggle */}
-            <button
-              className="asb__popover-row asb__popover-row--btn"
-              onClick={() => setDark(d => !d)}
-            >
-              <span className="asb__popover-row-icon">
-                {dark ? <Icon.Sun /> : <Icon.Moon />}
-              </span>
-              <span className="asb__popover-row-text">
-                {dark ? "Light Mode" : "Dark Mode"}
-              </span>
-              <span className={`asb__theme-pill ${dark ? "asb__theme-pill--on" : ""}`}>
-                <span className="asb__theme-pill-knob" />
-              </span>
-            </button>
-
-            <div className="asb__popover-divider" />
-
-            {/* Logout */}
-            <button
-              className="asb__popover-row asb__popover-row--btn asb__popover-row--danger"
-              onClick={handleLogout}
-            >
-              <span className="asb__popover-row-icon"><Icon.Logout /></span>
-              <span className="asb__popover-row-text">Log out</span>
-            </button>
-
-          </div>
-        )}
-      </div>
-
-    </aside>
+      </aside>
+    </>
   );
 }

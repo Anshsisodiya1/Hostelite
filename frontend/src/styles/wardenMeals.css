@@ -87,6 +87,31 @@ body {
 }
 
 /* ────────────────────────────────────────────────────
+   FETCH LOADER (shown on mount while checking backend)
+──────────────────────────────────────────────────── */
+.wm-fetch-loader {
+  display:         flex;
+  flex-direction:  column;
+  align-items:     center;
+  justify-content: center;
+  padding:         80px 20px;
+  gap:             16px;
+  color:           var(--t3);
+  font-size:       .88rem;
+  font-weight:     500;
+}
+
+.wm-fetch-spinner {
+  color:     var(--blue);
+  animation: wmSpin .9s linear infinite;
+  display:   flex;
+}
+
+@keyframes wmSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ────────────────────────────────────────────────────
    OVERLAY LOADER
 ──────────────────────────────────────────────────── */
 .wm-overlay {
@@ -129,7 +154,6 @@ body {
   to   { transform: translateY(0) scale(1); opacity: 1; }
 }
 
-/* Triple pulsing rings */
 .wm-overlay-rings {
   position: relative;
   width: 72px;
@@ -178,7 +202,6 @@ body {
   line-height: 1.6;
 }
 
-/* Step indicators */
 .wm-overlay-steps {
   display: flex;
   flex-direction: column;
@@ -209,7 +232,6 @@ body {
   border: 1px solid var(--blue-m);
 }
 
-/* Dot pulse for active step */
 .wm-dot-pulse {
   width: 8px; height: 8px;
   border-radius: 50%;
@@ -251,7 +273,6 @@ body {
   border-radius: var(--r4) var(--r4) 0 0;
 }
 
-/* Back button */
 .wm-back {
   display: inline-flex;
   align-items: center;
@@ -275,7 +296,6 @@ body {
   color: var(--blue);
 }
 
-/* Title */
 .wm-header-meta { flex: 1; }
 
 .wm-title-row {
@@ -308,7 +328,6 @@ body {
   color: var(--t3);
 }
 
-/* Clock */
 .wm-clock-badge {
   display: flex;
   align-items: center;
@@ -375,7 +394,6 @@ body {
   flex: 1;
 }
 
-/* Progress (form mode) */
 .wm-progress-wrap {
   display: flex;
   flex-direction: column;
@@ -405,7 +423,6 @@ body {
   transition: width .4s var(--spring);
 }
 
-/* Saved chip (view mode) */
 .wm-saved-chip {
   display: inline-flex;
   align-items: center;
@@ -421,7 +438,7 @@ body {
 }
 
 /* ────────────────────────────────────────────────────
-   SUCCESS BANNER (view mode top)
+   SUCCESS BANNER
 ──────────────────────────────────────────────────── */
 .wm-success-banner {
   background: var(--emerald-s);
@@ -488,7 +505,6 @@ body {
 .wm-meal-card--filled { border-color: var(--emerald-m); background: var(--emerald-s); }
 .wm-meal-card--filled:hover { border-color: var(--emerald); box-shadow: 0 0 0 3px var(--emerald-t); }
 
-/* Card header row */
 .wm-meal-card-header {
   display: flex;
   align-items: center;
@@ -496,7 +512,6 @@ body {
   margin-bottom: 14px;
 }
 
-/* Meal icon box */
 .wm-meal-icon {
   width: 38px; height: 38px;
   border-radius: var(--r1);
@@ -523,7 +538,6 @@ body {
   font-family: var(--ff-mono);
 }
 
-/* Green check badge */
 .wm-meal-check {
   margin-left: auto;
   width: 24px; height: 24px;
@@ -540,7 +554,6 @@ body {
   to   { transform: scale(1); }
 }
 
-/* Input */
 .wm-input {
   width: 100%;
   padding: 11px 14px;
@@ -587,12 +600,10 @@ body {
 
 .wm-view-card:hover { box-shadow: var(--s1); border-color: var(--b2); }
 
-/* Colored left accent per meal */
 .wm-view-card--amber  { border-left: 3px solid var(--amber); }
 .wm-view-card--blue   { border-left: 3px solid var(--blue); }
 .wm-view-card--violet { border-left: 3px solid var(--violet); }
 
-/* Empty state */
 .wm-view-card--empty { opacity: .6; }
 
 .wm-view-card__left {
@@ -638,7 +649,7 @@ body {
 }
 
 /* ────────────────────────────────────────────────────
-   SAVE BUTTON (form mode)
+   SAVE BUTTON
 ──────────────────────────────────────────────────── */
 .wm-save-btn {
   width: 100%;
@@ -677,20 +688,17 @@ body {
   transform: none;
 }
 
-/* Spinner inside button */
 .wm-spinner {
   width: 16px; height: 16px;
   border: 2px solid rgba(255,255,255,.35);
   border-top-color: #fff;
   border-radius: 50%;
-  animation: spin .7s linear infinite;
+  animation: wmSpin .7s linear infinite;
   flex-shrink: 0;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
-
 /* ────────────────────────────────────────────────────
-   EDIT BUTTON (view mode)
+   EDIT BUTTON
 ──────────────────────────────────────────────────── */
 .wm-edit-btn {
   width: 100%;
@@ -720,12 +728,10 @@ body {
   transform: translateY(-1px);
 }
 
-.wm-edit-btn:active {
-  transform: translateY(0);
-}
+.wm-edit-btn:active { transform: translateY(0); }
 
 /* ────────────────────────────────────────────────────
-   FOOTER NOTES
+   FOOTER NOTE
 ──────────────────────────────────────────────────── */
 .wm-reset-note {
   display: flex;

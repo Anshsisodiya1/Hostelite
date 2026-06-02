@@ -13,6 +13,7 @@ export default function Layout() {
     () => localStorage.getItem("sb_collapsed") === "true"
   );
 
+  // Sync collapsed state from localStorage (set by AdminSidebar)
   useEffect(() => {
     const interval = setInterval(() => {
       const val = localStorage.getItem("sb_collapsed") === "true";
@@ -20,6 +21,20 @@ export default function Layout() {
     }, 100);
     return () => clearInterval(interval);
   }, []);
+
+  // Detect mobile
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+
+  // On mobile: no left margin (sidebar is a fixed overlay drawer)
+  // On desktop: margin = sidebar width
+  const marginLeft = isAdmin && !isMobile
+    ? collapsed ? "64px" : "240px"
+    : "0";
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -30,12 +45,20 @@ export default function Layout() {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          marginLeft: isAdmin ? (collapsed ? "64px" : "240px") : "0",
+          marginLeft,
           transition: "margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+          width: isAdmin && !isMobile ? "auto" : "100%",
+          minWidth: 0,
         }}
       >
         {user && !isAdmin && <Navbar />}
-        <main style={{ flex: 1, minHeight: "80vh", padding: "20px" }}>
+        <main
+          style={{
+            flex: 1,
+            minHeight: "80vh",
+            padding: isMobile ? "72px 16px 20px" : "20px",
+          }}
+        >
           <Outlet />
         </main>
         {user && <Footer />}

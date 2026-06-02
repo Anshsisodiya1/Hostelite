@@ -147,7 +147,7 @@ export default function Dashboard() {
   /* ════════════════════════════════════════════════
      WARDEN — delegated to WardenDashboard
   ════════════════════════════════════════════════ */
-  if (user.role === "warden") return <WardenDashboard />;
+  if (user.role === "warden") return <Wardendashboard />;
 
   /* ════════════════════════════════════════════════
      ADMIN DASHBOARD

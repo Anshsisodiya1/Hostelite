@@ -6,7 +6,7 @@ import "../styles/dashboard.css";
 import axios from "axios";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
 import { app } from "../firebase";
-import WardenDashboard from "./WardenDashboard"; // ← new import
+import Wardendashboard from "./Wardendashboard"; 
 
 import {
   Users,

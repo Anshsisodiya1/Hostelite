@@ -6,8 +6,14 @@ const Floor = require("../models/Floor");
 const getMyProfile = async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
-      .populate("room", "roomNumber")
-      .populate("floor", "floorNumber")
+      .populate({
+        path: "room",
+        populate: {
+          path: "floor",        
+          select: "floorNumber"
+        }
+      })
+      .populate("floor", "floorNumber") 
       .select("-password");
 
     res.status(200).json(user);

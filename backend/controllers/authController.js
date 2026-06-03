@@ -62,14 +62,23 @@ const registerUser = async (req, res) => {
 };
 
 
+//  HELPER — populated user fetch (reused in login + 2FA login)
+
+const getPopulatedUser = (userId) =>
+  User.findById(userId)
+    .populate({
+      path: "room",
+      populate: { path: "floor" }, // nested: student ke liye room.floor
+    })
+    .populate("floor", "floorNumber") // warden ke liye direct floor
+    .select("-password");
+
+
 // LOGIN (with portal-based role enforcement)
 //
 // The frontend sends a "portal" field:
 //   portal: "admin" → only role === "admin" is allowed
 //   portal: "user"  → only role === "student" or "warden" is allowed
-//
-// This enforces separation on the backend so it cannot be bypassed
-// by directly calling the API.
 
 const loginUser = async (req, res) => {
   try {
@@ -130,14 +139,12 @@ const loginUser = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    //  FIX: populated user return  (floor + room included)
+    const populatedUser = await getPopulatedUser(user._id);
+
     res.json({
       token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: populatedUser,
     });
   } catch (error) {
     console.error("LOGIN ERROR:", error);
@@ -214,7 +221,7 @@ const verify2FALogin = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // PORTAL ROLE ENFORCEMENT — same check as loginUser
+    // PORTAL ROLE ENFORCEMENT
     if (portal === "admin" && user.role !== "admin") {
       return res.status(403).json({
         message: "Only administrators can login from this portal.",
@@ -249,14 +256,12 @@ const verify2FALogin = async (req, res) => {
       { expiresIn: "7d" }
     );
 
+    // FIX: populated user return karo (floor + room included)
+    const populatedUser = await getPopulatedUser(user._id);
+
     res.json({
       token: jwtToken,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
+      user: populatedUser,
     });
   } catch (error) {
     console.error("2FA LOGIN ERROR:", error);

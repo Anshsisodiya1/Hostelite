@@ -3,9 +3,8 @@ const Complaint = require("../models/Complaint");
 const User = require("../models/User");
 const nodemailer = require("nodemailer");
 
-// ==============================
 // STUDENT: SUBMIT COMPLAINT
-// ==============================
+
 exports.submitComplaint = async (req, res) => {
   try {
     const { title, description, priority } = req.body;
@@ -66,9 +65,9 @@ exports.submitComplaint = async (req, res) => {
   }
 };
 
-// ==============================
+
 // GET COMPLAINTS (FIXED POPULATION)
-// ==============================
+
 exports.getComplaints = async (req, res) => {
   try {
     const user = req.user;
@@ -99,7 +98,7 @@ exports.getComplaints = async (req, res) => {
     else if (user.role === "warden") {
       complaints = await Complaint.find({
         warden: user._id,
-        createdAt: { $gte: sevenDaysAgo }, // 🔥 only last 7 days
+        createdAt: { $gte: sevenDaysAgo }, 
       })
         .populate(basePopulate)
         .sort({ createdAt: -1 });
@@ -133,9 +132,9 @@ exports.getComplaints = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-// ==============================
+
 // UPDATE STATUS
-// ==============================
+
 exports.updateComplaintStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -184,9 +183,8 @@ exports.updateComplaintStatus = async (req, res) => {
   }
 };
 
-// ==============================
 // MARK NOTIFIED
-// ==============================
+
 exports.markAsNotified = async (req, res) => {
   try {
     const complaint = await Complaint.findById(req.params.id);
@@ -218,7 +216,7 @@ exports.rejectComplaint = async (req, res) => {
     complaint.status = "rejected";
     await complaint.save();
 
-    // 📧 SEND EMAIL TO STUDENT
+    //  SEND EMAIL TO STUDENT
     const transporter = nodemailer.createTransport({
       service: "gmail",
       auth: {

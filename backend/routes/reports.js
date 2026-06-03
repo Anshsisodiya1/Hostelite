@@ -4,7 +4,6 @@
 
 const express = require("express");
 const router = express.Router();
-
 const PDFDocument = require("pdfkit");
 
 // ── Models ───────────────────────────────────────────────────────────────────
@@ -12,6 +11,7 @@ const User = require("../models/User");
 const Room = require("../models/Room");
 const Floor = require("../models/Floor");
 const Complaint = require("../models/Complaint");
+const UserProfile = require("../models/UserProfile");
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 const { authMiddleware } = require("../middleware/authMiddleware");
@@ -21,58 +21,29 @@ const { authMiddleware } = require("../middleware/authMiddleware");
 // ─────────────────────────────────────────────────────────────────────────────
 function createPDF(res, filename, buildFn) {
   res.setHeader("Content-Type", "application/pdf");
+  res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
 
-  res.setHeader(
-    "Content-Disposition",
-    `attachment; filename="${filename}"`
-  );
-
-  const doc = new PDFDocument({
-    margin: 50,
-    size: "A4",
-    bufferPages: true,
-  });
-
+  const doc = new PDFDocument({ margin: 50, size: "A4", bufferPages: true });
   doc.pipe(res);
 
-  // Header
+  // Header banner
   doc.rect(0, 0, doc.page.width, 80).fill("#1e3a5f");
-
-  doc
-    .fillColor("#ffffff")
-    .font("Helvetica-Bold")
-    .fontSize(20)
+  doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(20)
     .text("Hostelite - Hostel Management System", 50, 22);
-
-  doc
-    .fillColor("#bfdbfe")
-    .font("Helvetica")
-    .fontSize(11)
+  doc.fillColor("#bfdbfe").font("Helvetica").fontSize(11)
     .text("Admin Report", 50, 50);
-
   doc.moveDown(3);
 
   buildFn(doc);
 
-  // Footer
+  // Footer on every page
   const pageCount = doc.bufferedPageRange().count;
-
   for (let i = 0; i < pageCount; i++) {
     doc.switchToPage(i);
-
-    doc
-      .fillColor("#64748b")
-      .fontSize(9)
-      .font("Helvetica")
+    doc.fillColor("#64748b").fontSize(9).font("Helvetica")
       .text(
-        `Generated on ${new Date().toLocaleString()} | Page ${
-          i + 1
-        } of ${pageCount}`,
-        50,
-        doc.page.height - 40,
-        {
-          align: "center",
-        }
+        `Generated on ${new Date().toLocaleString()} | Page ${i + 1} of ${pageCount}`,
+        50, doc.page.height - 40, { align: "center" }
       );
   }
 
@@ -83,36 +54,30 @@ function createPDF(res, filename, buildFn) {
 // Helper — Section Title
 // ─────────────────────────────────────────────────────────────────────────────
 function sectionTitle(doc, title) {
-  doc
-    .moveDown(0.8)
-    .fillColor("#1e3a5f")
-    .font("Helvetica-Bold")
-    .fontSize(14)
+  doc.moveDown(0.8)
+    .fillColor("#1e3a5f").font("Helvetica-Bold").fontSize(14)
     .text(title);
-
   doc.moveDown(0.4);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Helper — Floor Sub-heading
+// ─────────────────────────────────────────────────────────────────────────────
+function floorHeading(doc, floorNumber) {
+  doc.moveDown(0.6)
+    .rect(50, doc.y, doc.page.width - 100, 20).fill("#e0f2fe");
+  doc.fillColor("#0369a1").font("Helvetica-Bold").fontSize(10)
+    .text(`  Floor ${floorNumber}`, 55, doc.y - 14);
+  doc.moveDown(0.2);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helper — Report Meta
 // ─────────────────────────────────────────────────────────────────────────────
 function reportMeta(doc, title, startDate, endDate) {
-  doc
-    .fillColor("#111827")
-    .font("Helvetica-Bold")
-    .fontSize(17)
-    .text(title);
-
-  doc
-    .fillColor("#64748b")
-    .font("Helvetica")
-    .fontSize(10)
-    .text(
-      `Period: ${new Date(startDate).toDateString()} → ${new Date(
-        endDate
-      ).toDateString()}`
-    );
-
+  doc.fillColor("#111827").font("Helvetica-Bold").fontSize(17).text(title);
+  doc.fillColor("#64748b").font("Helvetica").fontSize(10)
+    .text(`Period: ${new Date(startDate).toDateString()} → ${new Date(endDate).toDateString()}`);
   doc.moveDown();
 }
 
@@ -122,26 +87,18 @@ function reportMeta(doc, title, startDate, endDate) {
 function drawTable(doc, headers, rows, widths) {
   const startX = 50;
   const rowHeight = 24;
+  const totalWidth = widths.reduce((a, b) => a + b, 0);
 
   let y = doc.y + 10;
 
   // Header row
-  doc
-    .rect(startX, y, widths.reduce((a, b) => a + b, 0), rowHeight)
-    .fill("#1e3a5f");
-
+  doc.rect(startX, y, totalWidth, rowHeight).fill("#1e3a5f");
   doc.fillColor("#ffffff").font("Helvetica-Bold").fontSize(9);
-
   let x = startX;
-
-  headers.forEach((header, index) => {
-    doc.text(header, x + 5, y + 7, {
-      width: widths[index] - 10,
-    });
-
-    x += widths[index];
+  headers.forEach((header, i) => {
+    doc.text(header, x + 5, y + 7, { width: widths[i] - 10 });
+    x += widths[i];
   });
-
   y += rowHeight;
 
   // Body rows
@@ -150,30 +107,18 @@ function drawTable(doc, headers, rows, widths) {
       doc.addPage();
       y = 60;
     }
-
     const bgColor = rowIndex % 2 === 0 ? "#f8fafc" : "#ffffff";
-
-    doc
-      .rect(startX, y, widths.reduce((a, b) => a + b, 0), rowHeight)
-      .fill(bgColor);
-
+    doc.rect(startX, y, totalWidth, rowHeight).fill(bgColor);
     doc.fillColor("#111827").font("Helvetica").fontSize(8.5);
-
     x = startX;
-
-    row.forEach((cell, index) => {
+    row.forEach((cell, i) => {
       doc.text(String(cell ?? "—"), x + 5, y + 7, {
-        width: widths[index] - 10,
+        width: widths[i] - 10,
         ellipsis: true,
       });
-
-      x += widths[index];
+      x += widths[i];
     });
-
-    doc
-      .rect(startX, y, widths.reduce((a, b) => a + b, 0), rowHeight)
-      .stroke("#e2e8f0");
-
+    doc.rect(startX, y, totalWidth, rowHeight).stroke("#e2e8f0");
     y += rowHeight;
   });
 
@@ -181,302 +126,331 @@ function drawTable(doc, headers, rows, widths) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// STUDENT REPORT
+// 1. STUDENT REPORT — Summary + Full Student List
 // ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  "/students",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
+router.get("/students", authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
-      const start = new Date(startDate);
-
-      const end = new Date(endDate);
-
-      end.setHours(23, 59, 59, 999);
-
-      const students = await User.find({
-        role: "student",
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
+    const students = await User.find({
+      role: "student",
+      createdAt: { $gte: start, $lte: end },
+    })
+      .populate({
+        path: "room",
+        select: "roomNumber isOccupied floor",
+        populate: { path: "floor", select: "floorNumber" },
       })
-        .populate({
-          path: "room",
-          select: "roomNumber isOccupied floor",
-          populate: {
-            path: "floor",
-            select: "floorNumber",
-          },
-        })
-        .lean();
+      .lean();
 
-      const totalRooms = await Room.countDocuments();
+    const totalRooms    = await Room.countDocuments();
+    const occupiedRooms = await Room.countDocuments({ isOccupied: true });
+    const vacantRooms   = totalRooms - occupiedRooms;
 
-      const occupiedRooms = await Room.countDocuments({
-        isOccupied: true,
+    createPDF(res, `student-report-${startDate}-${endDate}.pdf`, (doc) => {
+      reportMeta(doc, "Student Occupancy Report", startDate, endDate);
+
+      // ── Summary ──
+      sectionTitle(doc, "Summary");
+      drawTable(
+        doc,
+        ["Metric", "Value"],
+        [
+          ["Total Students",  students.length],
+          ["Total Rooms",     totalRooms],
+          ["Occupied Rooms",  occupiedRooms],
+          ["Vacant Rooms",    vacantRooms],
+        ],
+        [300, 200]
+      );
+
+      // ── Full Student List ──
+      sectionTitle(doc, "Student Details");
+      const rows = students.map((s) => [
+        s.name        || "—",
+        s.email       || "—",
+        s.room?.roomNumber        || "Unassigned",
+        s.room?.floor?.floorNumber ?? "—",
+        new Date(s.createdAt).toLocaleDateString(),
+      ]);
+
+      if (rows.length === 0) {
+        doc.fillColor("#64748b").font("Helvetica").fontSize(10)
+          .text("No students found in this date range.");
+      } else {
+        drawTable(
+          doc,
+          ["Name", "Email", "Room", "Floor", "Joined"],
+          rows,
+          [120, 175, 65, 55, 90]
+        );
+      }
+    });
+  } catch (error) {
+    console.error("Student Report Error:", error);
+    res.status(500).json({ message: "Failed to generate student report" });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. COMPLAINT REPORT — Floor-wise grouping
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/complaints", authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = new Date(startDate);
+    const end   = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    const complaints = await Complaint.find({
+      createdAt: { $gte: start, $lte: end },
+    })
+      .populate("student", "name email")
+      .populate("warden",  "name")
+      .populate("room",    "roomNumber")
+      .populate("floor",   "floorNumber")
+      .lean();
+
+    // Group by floor
+    const byFloor = {};
+    complaints.forEach((c) => {
+      const floorNum = c.floor?.floorNumber ?? "Unassigned";
+      if (!byFloor[floorNum]) byFloor[floorNum] = [];
+      byFloor[floorNum].push(c);
+    });
+
+    createPDF(res, `complaints-report-${startDate}-${endDate}.pdf`, (doc) => {
+      reportMeta(doc, "Complaint Report", startDate, endDate);
+
+      // ── Summary ──
+      sectionTitle(doc, "Summary");
+      const pending    = complaints.filter(c => c.status === "pending").length;
+      const inProgress = complaints.filter(c => c.status === "in-progress").length;
+      const resolved   = complaints.filter(c => c.status === "resolved").length;
+      const rejected   = complaints.filter(c => c.status === "rejected").length;
+
+      drawTable(
+        doc,
+        ["Metric", "Count"],
+        [
+          ["Total Complaints",       complaints.length],
+          ["Pending",                pending],
+          ["In Progress",            inProgress],
+          ["Resolved",               resolved],
+          ["Rejected",               rejected],
+        ],
+        [300, 200]
+      );
+
+      // ── Floor-wise Complaints ──
+      sectionTitle(doc, "Complaints by Floor");
+
+      const sortedFloors = Object.keys(byFloor).sort((a, b) => {
+        if (a === "Unassigned") return 1;
+        if (b === "Unassigned") return -1;
+        return Number(a) - Number(b);
       });
 
-      const vacantRooms = totalRooms - occupiedRooms;
+      if (sortedFloors.length === 0) {
+        doc.fillColor("#64748b").font("Helvetica").fontSize(10)
+          .text("No complaints found in this date range.");
+      } else {
+        sortedFloors.forEach((floorNum) => {
+          floorHeading(doc, floorNum);
 
-      createPDF(
-        res,
-        `student-report-${startDate}-${endDate}.pdf`,
-        (doc) => {
-          reportMeta(
-            doc,
-            "Student Occupancy Report",
-            startDate,
-            endDate
-          );
-
-          sectionTitle(doc, "Summary");
-
-          drawTable(
-            doc,
-            ["Metric", "Value"],
-            [
-              ["Total Students", students.length],
-              ["Total Rooms", totalRooms],
-              ["Occupied Rooms", occupiedRooms],
-              ["Vacant Rooms", vacantRooms],
-            ],
-            [300, 200]
-          );
-
-          sectionTitle(doc, "Student Details");
-
-          const rows = students.map((student) => [
-            student.name || "—",
-            student.email || "—",
-            student.room?.roomNumber || "Unassigned",
-            student.room?.floor?.floorNumber || "—",
-            new Date(student.createdAt).toLocaleDateString(),
+          const rows = byFloor[floorNum].map((c) => [
+            c.student?.name  || "—",
+            c.room?.roomNumber || "—",
+            c.title          || "—",
+            c.priority       || "—",
+            c.status         || "—",
+            c.warden?.name   || "Unassigned",
+            new Date(c.createdAt).toLocaleDateString(),
           ]);
 
           drawTable(
             doc,
-            ["Name", "Email", "Room", "Floor", "Joined"],
+            ["Student", "Room", "Title", "Priority", "Status", "Warden", "Date"],
             rows,
-            [120, 180, 70, 60, 90]
+            [90, 45, 120, 55, 65, 90, 70]
           );
-        }
-      );
-    } catch (error) {
-      console.error("Student Report Error:", error);
-
-      res.status(500).json({
-        message: "Failed to generate student report",
-      });
-    }
+        });
+      }
+    });
+  } catch (error) {
+    console.error("Complaint Report Error:", error);
+    res.status(500).json({ message: "Failed to generate complaint report" });
   }
-);
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
-// COMPLAINT REPORT
+// 3. STAFF / WARDEN REPORT — All wardens with name, email, floor, date joined
 // ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  "/complaints",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
+router.get("/staff", authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = new Date(startDate);
+    const end   = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
 
-      const start = new Date(startDate);
+    // ✅ All wardens in DB (not filtered by date so none are missed)
+    // But still respect date filter if needed — fetch all and note joined date
+    const wardens = await User.find({ role: "warden" })
+      .populate("floor", "floorNumber")
+      .lean();
 
-      const end = new Date(endDate);
+    createPDF(res, `staff-report-${startDate}-${endDate}.pdf`, (doc) => {
+      reportMeta(doc, "Warden / Staff Report", startDate, endDate);
 
-      end.setHours(23, 59, 59, 999);
+      sectionTitle(doc, "Summary");
+      drawTable(
+        doc,
+        ["Metric", "Value"],
+        [
+          ["Total Wardens", wardens.length],
+          ["Report Period", `${new Date(startDate).toDateString()} → ${new Date(endDate).toDateString()}`],
+        ],
+        [300, 200]
+      );
 
-      const complaints = await Complaint.find({
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
+      sectionTitle(doc, "Warden Details");
+
+      if (wardens.length === 0) {
+        doc.fillColor("#64748b").font("Helvetica").fontSize(10)
+          .text("No wardens found.");
+      } else {
+        const rows = wardens.map((w) => [
+          w.name                    || "—",
+          w.email                   || "—",
+          w.floor?.floorNumber ?? "Not Assigned",
+          new Date(w.createdAt).toLocaleDateString(),
+        ]);
+
+        drawTable(
+          doc,
+          ["Name", "Email", "Floor", "Date Joined"],
+          rows,
+          [150, 200, 80, 100]
+        );
+      }
+    });
+  } catch (error) {
+    console.error("Staff Report Error:", error);
+    res.status(500).json({ message: "Failed to generate staff report" });
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. ROOM ALLOCATION REPORT — Floor-wise student table
+// ─────────────────────────────────────────────────────────────────────────────
+router.get("/rooms", authMiddleware, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = new Date(startDate);
+    const end   = new Date(endDate);
+    end.setHours(23, 59, 59, 999);
+
+    // Fetch all floors sorted
+    const floors = await Floor.find().sort({ floorNumber: 1 }).lean();
+
+    // Fetch all students with populated room → floor
+    const students = await User.find({ role: "student" })
+      .populate({
+        path: "room",
+        populate: { path: "floor", select: "floorNumber" },
       })
-        .populate("student", "name email")
-        .populate("warden", "name")
-        .lean();
+      .lean();
 
-      createPDF(
-        res,
-        `complaints-report-${startDate}-${endDate}.pdf`,
-        (doc) => {
-          reportMeta(
-            doc,
-            "Complaint Report",
-            startDate,
-            endDate
-          );
+    // ✅ Fetch phone from UserProfile (phone lives in separate collection)
+    const studentIds = students.map((s) => s._id);
+    const profiles   = await UserProfile.find({ user: { $in: studentIds } })
+      .select("user phone")
+      .lean();
+    const phoneMap = {};
+    profiles.forEach((p) => { phoneMap[String(p.user)] = p.phone; });
 
-          sectionTitle(doc, "Complaint Details");
+    // Fetch room stats
+    const totalRooms    = await Room.countDocuments();
+    const occupiedRooms = await Room.countDocuments({ isOccupied: true });
+    const vacantRooms   = totalRooms - occupiedRooms;
 
-          const rows = complaints.map((complaint) => [
-            complaint.student?.name || "—",
-            complaint.title || "—",
-            complaint.priority || "—",
-            complaint.status || "—",
-            complaint.warden?.name || "Unassigned",
-            new Date(complaint.createdAt).toLocaleDateString(),
-          ]);
+    // Group students by floor
+    const byFloor = {};
+    floors.forEach((f) => { byFloor[f.floorNumber] = []; });
 
-          drawTable(
-            doc,
-            [
-              "Student",
-              "Title",
-              "Priority",
-              "Status",
-              "Warden",
-              "Date",
-            ],
-            rows,
-            [100, 140, 70, 80, 100, 80]
-          );
-        }
+    students.forEach((s) => {
+      const floorNum = s.room?.floor?.floorNumber;
+      if (floorNum != null) {
+        if (!byFloor[floorNum]) byFloor[floorNum] = [];
+        byFloor[floorNum].push(s);
+      } else {
+        if (!byFloor["Unassigned"]) byFloor["Unassigned"] = [];
+        byFloor["Unassigned"].push(s);
+      }
+    });
+
+    createPDF(res, `rooms-report-${startDate}-${endDate}.pdf`, (doc) => {
+      reportMeta(doc, "Room Allocation Report", startDate, endDate);
+
+      // ── Overall Summary ──
+      sectionTitle(doc, "Summary");
+      drawTable(
+        doc,
+        ["Metric", "Value"],
+        [
+          ["Total Rooms",    totalRooms],
+          ["Occupied Rooms", occupiedRooms],
+          ["Vacant Rooms",   vacantRooms],
+          ["Total Students", students.length],
+          ["Total Floors",   floors.length],
+        ],
+        [300, 200]
       );
-    } catch (error) {
-      console.error("Complaint Report Error:", error);
 
-      res.status(500).json({
-        message: "Failed to generate complaint report",
+      // ── Floor-wise Student Table ──
+      sectionTitle(doc, "Students by Floor");
+
+      const floorKeys = Object.keys(byFloor).sort((a, b) => {
+        if (a === "Unassigned") return 1;
+        if (b === "Unassigned") return -1;
+        return Number(a) - Number(b);
       });
-    }
-  }
-);
 
-// ─────────────────────────────────────────────────────────────────────────────
-// STAFF REPORT
-// ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  "/staff",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
+      floorKeys.forEach((floorNum) => {
+        const floorStudents = byFloor[floorNum];
+        floorHeading(doc, floorNum);
 
-      const start = new Date(startDate);
-
-      const end = new Date(endDate);
-
-      end.setHours(23, 59, 59, 999);
-
-      const wardens = await User.find({
-        role: "warden",
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
-      }).lean();
-
-      createPDF(
-        res,
-        `staff-report-${startDate}-${endDate}.pdf`,
-        (doc) => {
-          reportMeta(
-            doc,
-            "Staff Report",
-            startDate,
-            endDate
-          );
-
-          sectionTitle(doc, "Warden Details");
-
-          const rows = wardens.map((warden) => [
-            warden.name || "—",
-            warden.email || "—",
-            new Date(warden.createdAt).toLocaleDateString(),
-          ]);
-
-          drawTable(
-            doc,
-            ["Name", "Email", "Joined"],
-            rows,
-            [180, 220, 120]
-          );
+        if (floorStudents.length === 0) {
+          doc.moveDown(0.3)
+            .fillColor("#94a3b8").font("Helvetica").fontSize(9)
+            .text("   No students on this floor.", 55, doc.y);
+          doc.moveDown(0.5);
+          return;
         }
-      );
-    } catch (error) {
-      console.error("Staff Report Error:", error);
 
-      res.status(500).json({
-        message: "Failed to generate staff report",
+        const rows = floorStudents.map((s) => [
+          s.name                          || "—",
+          s.email                         || "—",
+          phoneMap[String(s._id)]         || "—",
+          s.room?.roomNumber              || "—",
+          s.status                        || "active",
+        ]);
+
+        drawTable(
+          doc,
+          ["Name", "Email", "Phone", "Room No", "Status"],
+          rows,
+          [120, 175, 90, 60, 65]
+        );
       });
-    }
+    });
+  } catch (error) {
+    console.error("Room Report Error:", error);
+    res.status(500).json({ message: "Failed to generate room report" });
   }
-);
-
-// ─────────────────────────────────────────────────────────────────────────────
-// ROOM REPORT
-// ─────────────────────────────────────────────────────────────────────────────
-router.get(
-  "/rooms",
-  authMiddleware,
-  async (req, res) => {
-    try {
-      const { startDate, endDate } = req.query;
-
-      const start = new Date(startDate);
-
-      const end = new Date(endDate);
-
-      end.setHours(23, 59, 59, 999);
-
-      const rooms = await Room.find({
-        createdAt: {
-          $gte: start,
-          $lte: end,
-        },
-      })
-        .populate("assignedTo", "name email")
-        .populate("floor", "floorNumber")
-        .lean();
-
-      createPDF(
-        res,
-        `rooms-report-${startDate}-${endDate}.pdf`,
-        (doc) => {
-          reportMeta(
-            doc,
-            "Room Allocation Report",
-            startDate,
-            endDate
-          );
-
-          sectionTitle(doc, "Room Details");
-
-          const rows = rooms.map((room) => [
-            room.roomNumber || "—",
-            room.floor?.floorNumber || "—",
-            room.isOccupied ? "Occupied" : "Vacant",
-            room.assignedTo?.name || "Unassigned",
-            room.assignedTo?.email || "—",
-          ]);
-
-          drawTable(
-            doc,
-            [
-              "Room",
-              "Floor",
-              "Status",
-              "Student",
-              "Email",
-            ],
-            rows,
-            [70, 70, 90, 140, 180]
-          );
-        }
-      );
-    } catch (error) {
-      console.error("Room Report Error:", error);
-
-      res.status(500).json({
-        message: "Failed to generate room report",
-      });
-    }
-  }
-);
+});
 
 module.exports = router;

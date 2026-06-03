@@ -35,12 +35,10 @@ export default function AdminLogin() {
 
   useEffect(() => {
     const saved = localStorage.getItem("adminRememberedEmail");
-
     if (saved) {
       setEmail(saved);
       setRememberMe(true);
     }
-
     emailRef.current?.focus();
   }, []);
 
@@ -50,13 +48,10 @@ export default function AdminLogin() {
 
   const handleOtpChange = (index, value) => {
     if (!/^\d*$/.test(value)) return;
-
     const next = [...otp];
     next[index] = value.slice(-1);
-
     setOtp(next);
     setError("");
-
     if (value && index < 5) {
       otpRefs.current[index + 1]?.focus();
     }
@@ -73,12 +68,10 @@ export default function AdminLogin() {
       .getData("text")
       .replace(/\D/g, "")
       .slice(0, 6);
-
     if (pasted.length === 6) {
       setOtp(pasted.split(""));
       otpRefs.current[5]?.focus();
     }
-
     e.preventDefault();
   };
 
@@ -86,7 +79,6 @@ export default function AdminLogin() {
 
   const loginHandler = async (e) => {
     e.preventDefault();
-
     setError("");
 
     if (!email || !password) {
@@ -102,7 +94,6 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      // Pass portal: "admin" so backend enforces admin-only server-side
       const res = await API.post("/auth/login", {
         email,
         password,
@@ -124,13 +115,10 @@ export default function AdminLogin() {
         navigate("/admin/dashboard");
       }
     } catch (err) {
-      // Backend returns 403 when a non-admin tries the admin portal
       if (err.response?.status === 403) {
         setError("Only administrators can login from this portal.");
       } else {
-        setError(
-          err.response?.data?.message || "Login failed. Please try again."
-        );
+        setError(err.response?.data?.message || "Login failed. Please try again.");
       }
     } finally {
       setLoading(false);
@@ -141,7 +129,6 @@ export default function AdminLogin() {
 
   const verify2FAHandler = async () => {
     const otpString = otp.join("");
-
     if (otpString.length < 6) {
       setError("Enter all 6 digits.");
       return;
@@ -150,7 +137,6 @@ export default function AdminLogin() {
     setLoading(true);
 
     try {
-      // Pass portal: "admin" here too
       const res = await API.post("/auth/verify-2fa-login", {
         userId,
         token: otpString,
@@ -165,7 +151,6 @@ export default function AdminLogin() {
       } else {
         setError("Invalid code. Please try again.");
       }
-
       setOtp(["", "", "", "", "", ""]);
       otpRefs.current[0]?.focus();
     } finally {
@@ -180,7 +165,6 @@ export default function AdminLogin() {
       <div className="login-page">
         <div className="login-container">
           <h1 className="login-title">Admin Verification</h1>
-
           <p className="login-subtitle">
             Enter the 6-digit code from your authenticator app
           </p>
@@ -215,10 +199,7 @@ export default function AdminLogin() {
             disabled={loading || otp.join("").length < 6}
           >
             {loading ? (
-              <>
-                <Loader2 size={16} className="spin" />
-                Verifying...
-              </>
+              <><Loader2 size={16} className="spin" />Verifying...</>
             ) : (
               <>Confirm & Sign In</>
             )}
@@ -234,7 +215,6 @@ export default function AdminLogin() {
     <div className="login-page">
       <div className="login-container">
         <h1 className="login-title">Admin Portal</h1>
-
         <p className="login-subtitle">
           Sign in to access the Hostelite Administration Dashboard
         </p>
@@ -249,19 +229,14 @@ export default function AdminLogin() {
         <form onSubmit={loginHandler} className="login-form" noValidate>
           <div className="form-group">
             <label>Email</label>
-
             <div className="input-box">
               <Mail size={18} className="left-icon" />
-
               <input
                 ref={emailRef}
                 type="email"
                 placeholder="admin@hostelite.com"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setError("");
-                }}
+                onChange={(e) => { setEmail(e.target.value); setError(""); }}
                 autoComplete="email"
               />
             </div>
@@ -269,21 +244,15 @@ export default function AdminLogin() {
 
           <div className="form-group">
             <label>Password</label>
-
             <div className="input-box">
               <Lock size={18} className="left-icon-l" />
-
               <input
                 type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError("");
-                }}
+                onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 autoComplete="current-password"
               />
-
               <button
                 type="button"
                 className="right-icon"
@@ -291,6 +260,14 @@ export default function AdminLogin() {
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
+
+              {/* ✅ Forgot password — same style as Login.jsx */}
+              <span
+                className="forgot-password"
+                onClick={() => navigate("/forgot-password")}
+              >
+                Forgot password?
+              </span>
             </div>
           </div>
 
@@ -305,15 +282,9 @@ export default function AdminLogin() {
 
           <button type="submit" className="login-btn" disabled={loading}>
             {loading ? (
-              <>
-                <Loader2 size={18} className="spin" />
-                Signing in...
-              </>
+              <><Loader2 size={18} className="spin" />Signing in...</>
             ) : (
-              <>
-                Sign In
-                <ArrowRight size={18} />
-              </>
+              <>Sign In<ArrowRight size={18} /></>
             )}
           </button>
         </form>

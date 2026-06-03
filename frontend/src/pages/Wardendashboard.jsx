@@ -28,6 +28,10 @@ export default function WardenDashboard() {
   const { user }  = useAuth();
   const navigate  = useNavigate();
 
+  //  FIX: Extract floorNumber properly
+
+  const floorDisplay = user?.floor?.floorNumber ?? user?.floor ?? "N/A";
+
   const [rooms,            setRooms]            = useState([]);
   const [floorStudents,    setFloorStudents]    = useState([]);
   const [roomRequestCount, setRoomRequestCount] = useState(0);
@@ -37,7 +41,7 @@ export default function WardenDashboard() {
   const [searchTerm,       setSearchTerm]       = useState("");
 
   // Admin contacts state
-  const [adminContacts,      setAdminContacts]      = useState([]);
+  const [adminContacts,        setAdminContacts]        = useState([]);
   const [adminContactsLoading, setAdminContactsLoading] = useState(true);
 
   useEffect(() => {
@@ -76,23 +80,22 @@ export default function WardenDashboard() {
       } catch {}
     })();
 
-    // Admin contacts (reuse the dashboard-contacts endpoint)
+    // Admin contacts
     (async () => {
-  try {
-    const res = await API.get("/users/dashboard-contacts");
-
-    if (res.data?.admin) {
-      setAdminContacts([res.data.admin]);
-    } else {
-      setAdminContacts([]);
-    }
-  } catch (error) {
-    console.error("Failed to fetch admin contacts:", error);
-    setAdminContacts([]);
-  } finally {
-    setAdminContactsLoading(false);
-  }
-})();
+      try {
+        const res = await API.get("/users/dashboard-contacts");
+        if (res.data?.admin) {
+          setAdminContacts([res.data.admin]);
+        } else {
+          setAdminContacts([]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch admin contacts:", error);
+        setAdminContacts([]);
+      } finally {
+        setAdminContactsLoading(false);
+      }
+    })();
   }, [user]);
 
   if (!user || user.role !== "warden") return null;
@@ -137,9 +140,10 @@ export default function WardenDashboard() {
           <h1 className="wd-page-header__title">
             {greeting()}, {user.name.split(" ")[0]}
           </h1>
+          {/* FIX: floorDisplay instead of user.floor */}
           <p className="wd-page-header__sub">
             <Calendar size={13} />
-            {fmtDate()} &nbsp;·&nbsp; Floor {user.floor}
+            {fmtDate()} &nbsp;·&nbsp; Floor {floorDisplay}
           </p>
         </div>
         <div className="wd-page-header__right">
@@ -178,10 +182,11 @@ export default function WardenDashboard() {
 
       {/* ── KPI CARDS ── */}
       <div className="wd-kpi-grid">
+        {/*  FIX: floorDisplay in sub */}
         <KpiCard
           label="Total Rooms"
           value={totalRooms}
-          sub={`Floor ${user.floor}`}
+          sub={`Floor ${floorDisplay}`}
           icon={<Building2 size={18} />}
           trend={null}
           color="default"
@@ -237,7 +242,8 @@ export default function WardenDashboard() {
           <div className="wd-card">
             <div className="wd-card__hd">
               <span className="wd-card__title">Occupancy</span>
-              <span className="wd-pill wd-pill--blue">Floor {user.floor}</span>
+              {/*  FIX: floorDisplay */}
+              <span className="wd-pill wd-pill--blue">Floor {floorDisplay}</span>
             </div>
             <div className="wd-occ-wrap">
               <OccRing pct={occupancyPct} occ={occupiedRooms} total={totalRooms} />
@@ -280,7 +286,7 @@ export default function WardenDashboard() {
               <ActionRow
                 icon={<Users size={15} />}
                 label="Student Roster"
-                sub={`${totalStudents} students on floor ${user.floor}`}
+                sub={`${totalStudents} students on floor ${floorDisplay}`}
                 onClick={() => setRosterOpen(v => !v)}
                 active={rosterOpen}
                 trailing={rosterOpen ? <ChevronUp size={14} /> : <ArrowRight size={14} />}
@@ -398,15 +404,14 @@ export default function WardenDashboard() {
         <div className="wd-roster">
           <div className="wd-roster__hd">
             <div>
-              <h2 className="wd-roster__title">Student Roster — Floor {user.floor}</h2>
+              {/*  FIX: floorDisplay */}
+              <h2 className="wd-roster__title">Student Roster — Floor {floorDisplay}</h2>
               <p className="wd-roster__sub">
                 {filtered.length} of {totalStudents} students
                 {searchTerm && ` · "${searchTerm}"`}
               </p>
             </div>
             <div className="wd-roster__controls">
-              <div className="wd-search">
-                <Search size={14} />
                 <input
                   type="text"
                   placeholder="Search name, email, room…"
@@ -416,7 +421,7 @@ export default function WardenDashboard() {
                 {searchTerm && (
                   <button onClick={() => setSearchTerm("")}><X size={12} /></button>
                 )}
-              </div>
+              
               <button className="wd-close-btn" onClick={() => { setRosterOpen(false); setSearchTerm(""); }}>
                 <X size={13} /> Close
               </button>

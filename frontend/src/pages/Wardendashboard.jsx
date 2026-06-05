@@ -2,7 +2,6 @@ import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import API from "../services/api";
-import axios from "axios";
 import "../styles/warden.css";
 
 import {
@@ -28,8 +27,6 @@ export default function WardenDashboard() {
   const { user }  = useAuth();
   const navigate  = useNavigate();
 
-  //  FIX: Extract floorNumber properly
-
   const floorDisplay = user?.floor?.floorNumber ?? user?.floor ?? "N/A";
 
   const [rooms,            setRooms]            = useState([]);
@@ -40,23 +37,22 @@ export default function WardenDashboard() {
   const [rosterOpen,       setRosterOpen]       = useState(false);
   const [searchTerm,       setSearchTerm]       = useState("");
 
-  // Admin contacts state
   const [adminContacts,        setAdminContacts]        = useState([]);
   const [adminContactsLoading, setAdminContactsLoading] = useState(true);
 
   useEffect(() => {
     if (user?.role !== "warden") return;
 
-    // Students + rooms
+    // ✅ FIX: Using API instance instead of hardcoded localhost axios call
     (async () => {
       try {
-        const token = localStorage.getItem("token");
-        const res = await axios.get("http://localhost:5001/api/warden/students", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await API.get("/warden/students");
         setFloorStudents(res.data.students || []);
         setRooms(res.data.rooms || []);
-      } catch { setFloorStudents([]); setRooms([]); }
+      } catch {
+        setFloorStudents([]);
+        setRooms([]);
+      }
     })();
 
     // Room requests
@@ -140,7 +136,6 @@ export default function WardenDashboard() {
           <h1 className="wd-page-header__title">
             {greeting()}, {user.name.split(" ")[0]}
           </h1>
-          {/* FIX: floorDisplay instead of user.floor */}
           <p className="wd-page-header__sub">
             <Calendar size={13} />
             {fmtDate()} &nbsp;·&nbsp; Floor {floorDisplay}
@@ -182,7 +177,6 @@ export default function WardenDashboard() {
 
       {/* ── KPI CARDS ── */}
       <div className="wd-kpi-grid">
-        {/*  FIX: floorDisplay in sub */}
         <KpiCard
           label="Total Rooms"
           value={totalRooms}
@@ -242,7 +236,6 @@ export default function WardenDashboard() {
           <div className="wd-card">
             <div className="wd-card__hd">
               <span className="wd-card__title">Occupancy</span>
-              {/*  FIX: floorDisplay */}
               <span className="wd-pill wd-pill--blue">Floor {floorDisplay}</span>
             </div>
             <div className="wd-occ-wrap">
@@ -404,7 +397,6 @@ export default function WardenDashboard() {
         <div className="wd-roster">
           <div className="wd-roster__hd">
             <div>
-              {/*  FIX: floorDisplay */}
               <h2 className="wd-roster__title">Student Roster — Floor {floorDisplay}</h2>
               <p className="wd-roster__sub">
                 {filtered.length} of {totalStudents} students
@@ -412,16 +404,15 @@ export default function WardenDashboard() {
               </p>
             </div>
             <div className="wd-roster__controls">
-                <input
-                  type="text"
-                  placeholder="Search name, email, room…"
-                  value={searchTerm}
-                  onChange={e => setSearchTerm(e.target.value)}
-                />
-                {searchTerm && (
-                  <button onClick={() => setSearchTerm("")}><X size={12} /></button>
-                )}
-              
+              <input
+                type="text"
+                placeholder="Search name, email, room…"
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              {searchTerm && (
+                <button onClick={() => setSearchTerm("")}><X size={12} /></button>
+              )}
               <button className="wd-close-btn" onClick={() => { setRosterOpen(false); setSearchTerm(""); }}>
                 <X size={13} /> Close
               </button>

@@ -97,7 +97,7 @@ export default function TodayMeal() {
         <div>
           <h3>Today's Menu</h3>
 
-          {/* 🔥 SVG CLOCK + DATE */}
+          {/*  SVG CLOCK + DATE */}
           <div className="tm-time-row">
             <span className="tm-time-item">
               <Clock size={14} />

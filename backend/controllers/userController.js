@@ -9,11 +9,11 @@ const getMyProfile = async (req, res) => {
       .populate({
         path: "room",
         populate: {
-          path: "floor",        
-          select: "floorNumber"
-        }
+          path: "floor",
+          select: "floorNumber",
+        },
       })
-      .populate("floor", "floorNumber") 
+      .populate("floor", "floorNumber")
       .select("-password");
 
     res.status(200).json(user);
@@ -66,8 +66,12 @@ const updateUser = async (req, res) => {
         if (!newRoom)
           return res.status(404).json({ message: "Room not found" });
 
-        if (newRoom.isOccupied)
+        if (
+          newRoom.isOccupied &&
+          newRoom.assignedTo?.toString() !== user._id.toString()
+        ) {
           return res.status(400).json({ message: "Room already occupied" });
+        }
 
         newRoom.isOccupied = true;
         newRoom.assignedTo = user._id;
@@ -79,12 +83,31 @@ const updateUser = async (req, res) => {
       }
     }
 
-    // ================= FLOOR LOGIC (🔥 FIXED) =================
+    // ================= FLOOR LOGIC (FIXED) =================
     if (floor !== undefined) {
       if (floor) {
         const newFloor = await Floor.findById(floor);
-        if (!newFloor)
+
+        if (!newFloor) {
           return res.status(404).json({ message: "Floor not found" });
+        }
+
+        // IMPORTANT FIX: prevent duplicate floor assignment for wardens
+        const targetRole = role || user.role;
+
+        if (targetRole === "warden") {
+          const existingWarden = await User.findOne({
+            role: "warden",
+            floor: floor,
+            _id: { $ne: user._id },
+          });
+
+          if (existingWarden) {
+            return res.status(400).json({
+              message: `Floor ${newFloor.floorNumber} is already assigned to ${existingWarden.name}`,
+            });
+          }
+        }
 
         user.floor = floor;
       } else {
@@ -144,7 +167,7 @@ const saveToken = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { deviceToken: req.body.token },
-      { new: true },
+      { new: true }
     );
 
     res.json({ message: "Token saved", user });
@@ -153,20 +176,17 @@ const saveToken = async (req, res) => {
   }
 };
 
-// Get dashbaord Contacts
-
+// ================= DASHBOARD CONTACTS =================
 const getDashboardContacts = async (req, res) => {
   try {
     const currentUser = req.user;
 
-    // Get Admin
     const admin = await User.findOne({ role: "admin" }).select(
-      "-password -otp -otpExpires -twoFactorSecret",
+      "-password -otp -otpExpires -twoFactorSecret"
     );
 
     let warden = null;
 
-    // If student, fetch assigned warden
     if (currentUser.role === "student") {
       const student = await User.findById(currentUser.id).populate("floor");
 
@@ -178,15 +198,13 @@ const getDashboardContacts = async (req, res) => {
       }
     }
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       admin,
       warden,
     });
   } catch (error) {
-    console.error(error);
-
-    return res.status(500).json({
+    res.status(500).json({
       success: false,
       message: "Failed to fetch contacts",
     });

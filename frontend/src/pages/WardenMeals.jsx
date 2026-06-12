@@ -142,12 +142,15 @@ const WardenMeals = () => {
   };
 
   /* Edit: pre-fill form with current saved values */
-  const handleEdit = () => {
-    setMeals(savedMeals ? { ...savedMeals } : EMPTY_MEALS);
-    setViewMode(false);
-    setError("");
-  };
-
+const handleEdit = () => {
+  setMeals({
+    breakfast: savedMeals?.breakfast || "",
+    lunch:     savedMeals?.lunch     || "",
+    dinner:    savedMeals?.dinner    || "",
+  });
+  setViewMode(false);
+  setError("");
+};
   const filledCount = Object.values(meals).filter((v) => v.trim()).length;
 
   /* ── Shared header ── */
